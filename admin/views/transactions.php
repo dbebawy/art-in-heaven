@@ -441,13 +441,13 @@ jQuery(document).ready(function($) {
     $('#aih-sync-transactions').on('click', function() {
         var $btn = $(this);
         var $icon = $btn.prop('disabled', true).find('.dashicons');
-        $icon.removeClass('dashicons-update').addClass('dashicons-update-alt aih-spin');
+        $icon.addClass('aih-spin');
 
         $.post(ajaxurl, {
             action: 'aih_sync_pushpay_transactions',
             nonce: aihAdmin.nonce
         }, function(response) {
-            $icon.removeClass('dashicons-update-alt aih-spin').addClass('dashicons-update');
+            $icon.removeClass('aih-spin');
             $btn.prop('disabled', false);
             if (response.success) {
                 alert(response.data.message);
@@ -456,7 +456,7 @@ jQuery(document).ready(function($) {
                 alert('Error: ' + (response.data ? response.data.message : 'Sync failed'));
             }
         }).fail(function() {
-            $icon.removeClass('dashicons-update-alt aih-spin').addClass('dashicons-update');
+            $icon.removeClass('aih-spin');
             $btn.prop('disabled', false);
             alert('Request failed');
         });
