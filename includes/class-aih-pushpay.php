@@ -43,7 +43,7 @@ class AIH_Pushpay_API {
                 'organization_key' => get_option('aih_pushpay_sandbox_organization_key', ''),
                 'merchant_key' => get_option('aih_pushpay_sandbox_merchant_key', ''),
                 'merchant_handle' => get_option('aih_pushpay_sandbox_merchant_handle', ''),
-                'fund' => get_option('aih_pushpay_fund', 'art-in-heaven'),
+                'fund' => get_option('aih_pushpay_fund', ''),
                 'sandbox_mode' => true,
             );
         } else {
@@ -54,7 +54,7 @@ class AIH_Pushpay_API {
                 'organization_key' => get_option('aih_pushpay_organization_key', ''),
                 'merchant_key' => get_option('aih_pushpay_merchant_key', ''),
                 'merchant_handle' => get_option('aih_pushpay_merchant_handle', ''),
-                'fund' => get_option('aih_pushpay_fund', 'art-in-heaven'),
+                'fund' => get_option('aih_pushpay_fund', ''),
                 'sandbox_mode' => false,
             );
         }

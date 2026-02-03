@@ -310,8 +310,8 @@ $is_sandbox = get_option('aih_pushpay_sandbox', 0);
                 <tr>
                     <th scope="row"><label for="aih_pushpay_fund"><?php _e('Fund/Category', 'art-in-heaven'); ?></label></th>
                     <td>
-                        <input type="text" id="aih_pushpay_fund" name="aih_pushpay_fund" value="<?php echo esc_attr(get_option('aih_pushpay_fund', 'art-in-heaven')); ?>" class="regular-text">
-                        <p class="description"><?php _e('The fund/category name for auction payments in Pushpay', 'art-in-heaven'); ?></p>
+                        <input type="text" id="aih_pushpay_fund" name="aih_pushpay_fund" value="<?php echo esc_attr(get_option('aih_pushpay_fund', '')); ?>" class="regular-text">
+                        <p class="description"><?php _e('The fund/category name for auction payments in Pushpay. Required when Pushpay credentials are configured.', 'art-in-heaven'); ?></p>
                     </td>
                 </tr>
             </table>
@@ -626,6 +626,27 @@ jQuery(document).ready(function($) {
                 $btn.prop('disabled', false).text('<?php echo esc_js(__('Discover Keys from API', 'art-in-heaven')); ?>');
             }
         });
+    });
+
+    // Validate Fund/Category is filled when Pushpay credentials exist
+    $('form').on('submit', function(e) {
+        var isSandbox = $('input[name="aih_pushpay_sandbox"]:checked').val() === '1';
+        var hasCredentials = false;
+
+        if (isSandbox) {
+            hasCredentials = $('#aih_pushpay_sandbox_client_id').val().trim() !== ''
+                          || $('#aih_pushpay_sandbox_client_secret').val().trim() !== '';
+        } else {
+            hasCredentials = $('#aih_pushpay_client_id').val().trim() !== ''
+                          || $('#aih_pushpay_client_secret').val().trim() !== '';
+        }
+
+        if (hasCredentials && $('#aih_pushpay_fund').val().trim() === '') {
+            e.preventDefault();
+            alert('<?php echo esc_js(__('Fund/Category is required when Pushpay payment processing is configured.', 'art-in-heaven')); ?>');
+            $('#aih_pushpay_fund').focus();
+            return false;
+        }
     });
 
     // Toggle Pushpay environment sections
