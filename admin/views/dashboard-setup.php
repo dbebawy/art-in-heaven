@@ -14,7 +14,7 @@ $year = AIH_Database::get_auction_year();
         <p><?php printf(__('The database tables for auction year %s have not been created yet.', 'art-in-heaven'), '<strong>' . esc_html($year) . '</strong>'); ?></p>
         <p><?php _e('Click the button below to create the required tables and get started.', 'art-in-heaven'); ?></p>
         
-        <form method="post" action="">
+        <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven')); ?>">
             <?php wp_nonce_field('aih_create_tables', 'aih_create_tables_nonce'); ?>
             <input type="hidden" name="aih_action" value="create_tables">
             <button type="submit" class="button button-primary button-hero">
