@@ -4,15 +4,6 @@
  */
 if (!defined('ABSPATH')) exit;
 
-// Handle form submission first
-if (isset($_POST['aih_action']) && $_POST['aih_action'] === 'create_tables') {
-    if (wp_verify_nonce($_POST['aih_create_tables_nonce'], 'aih_create_tables')) {
-        AIH_Database::create_tables();
-        wp_redirect(admin_url('admin.php?page=art-in-heaven'));
-        exit;
-    }
-}
-
 $year = AIH_Database::get_auction_year();
 ?>
 <div class="wrap aih-admin-wrap">
