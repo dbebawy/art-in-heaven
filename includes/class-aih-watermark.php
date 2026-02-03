@@ -31,6 +31,72 @@ class AIH_Watermark {
     }
     
     /**
+     * Get the TTF font file path, downloading if necessary
+     */
+    private function get_font_file() {
+        $font_dir = AIH_PLUGIN_DIR . 'assets/fonts/';
+        $font_file = $font_dir . 'OpenSans-Bold.ttf';
+
+        // Already exists
+        if (file_exists($font_file)) {
+            return $font_file;
+        }
+
+        // Try WordPress bundled fonts (WP 6.x+)
+        $wp_fonts = array(
+            ABSPATH . 'wp-includes/fonts/inter/Inter-Bold.ttf',
+            ABSPATH . 'wp-includes/fonts/inter/Inter-VariableFont_slnt,wght.ttf',
+        );
+        foreach ($wp_fonts as $wp_font) {
+            if (file_exists($wp_font)) {
+                return $wp_font;
+            }
+        }
+
+        // Try to download Open Sans Bold
+        if (!function_exists('imagettftext')) {
+            return false; // No point downloading if FreeType isn't available
+        }
+
+        // Create directory
+        if (!file_exists($font_dir)) {
+            wp_mkdir_p($font_dir);
+        }
+
+        if (!is_writable(dirname($font_dir))) {
+            error_log('AIH: Cannot create font directory - not writable');
+            return false;
+        }
+
+        // Download from Google Fonts static CDN
+        $font_url = 'https://fonts.gstatic.com/s/opensans/v40/memSYaGs76AUhyKEAxByaxU.ttf';
+        $response = wp_remote_get($font_url, array('timeout' => 15));
+
+        if (is_wp_error($response)) {
+            error_log('AIH: Font download failed: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $code = wp_remote_retrieve_response_code($response);
+
+        if ($code !== 200 || strlen($body) < 10000) {
+            error_log('AIH: Font download returned unexpected response (code: ' . $code . ', size: ' . strlen($body) . ')');
+            return false;
+        }
+
+        // Save font file
+        $saved = file_put_contents($font_file, $body);
+        if ($saved) {
+            error_log('AIH: Successfully downloaded OpenSans-Bold.ttf (' . size_format($saved) . ')');
+            return $font_file;
+        }
+
+        error_log('AIH: Failed to save font file');
+        return false;
+    }
+
+    /**
      * Apply watermark to an image
      */
     public function apply_watermark($image_path, $output_path = null) {
@@ -174,9 +240,9 @@ class AIH_Watermark {
             // Get watermark text
             $text = $this->get_watermark_text();
             
-            // Check for TTF font
-            $font_file = AIH_PLUGIN_DIR . 'assets/fonts/OpenSans-Bold.ttf';
-            $use_ttf = file_exists($font_file) && function_exists('imagettftext');
+            // Check for TTF font - auto-download if missing
+            $font_file = $this->get_font_file();
+            $use_ttf = $font_file && function_exists('imagettftext');
             
             if ($use_ttf) {
                 // Calculate font size based on image dimensions
