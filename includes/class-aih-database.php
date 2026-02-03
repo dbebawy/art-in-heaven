@@ -312,14 +312,24 @@ class AIH_Database {
         $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $check_table));
         if ($exists !== $check_table) {
             error_log('AIH: dbDelta failed, falling back to direct SQL queries');
+            // Log the first SQL statement for debugging
+            error_log('AIH: Sample SQL: ' . substr($sql_art, 0, 200));
+            error_log('AIH: charset_collate: ' . $charset_collate);
+
             foreach ($all_sql as $key => $sql) {
                 // Add IF NOT EXISTS for safety
                 $sql = str_replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', $sql);
                 $result = $wpdb->query($sql);
-                if ($result === false) {
-                    error_log('AIH: Direct SQL failed for ' . $key . ': ' . $wpdb->last_error);
-                }
+                error_log('AIH: Query result for ' . $key . ': ' . var_export($result, true) . ' | error: ' . $wpdb->last_error);
             }
+
+            // Check what tables exist now
+            $all_tables = $wpdb->get_col("SHOW TABLES LIKE '%" . $wpdb->prefix . $year . "%'");
+            error_log('AIH: Tables matching prefix+year: ' . print_r($all_tables, true));
+
+            // Also check tables_exist result
+            $like_result = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $check_table));
+            error_log('AIH: SHOW TABLES LIKE result: ' . var_export($like_result, true) . ' | expected: ' . $check_table);
         }
 
         // Migrate: Add bid_status column if it doesn't exist
