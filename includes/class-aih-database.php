@@ -310,7 +310,7 @@ class AIH_Database {
         // If dbDelta failed, fall back to direct queries
         $check_table = $wpdb->prefix . $year . '_ArtPieces';
         $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $check_table));
-        if ($exists !== $check_table) {
+        if (strtolower($exists) !== strtolower($check_table)) {
             error_log('AIH: dbDelta failed, falling back to direct SQL queries');
             // Log the first SQL statement for debugging
             error_log('AIH: Sample SQL: ' . substr($sql_art, 0, 200));
@@ -568,8 +568,9 @@ class AIH_Database {
             "SHOW TABLES LIKE %s",
             $table
         ));
-        
-        return $result === $table;
+
+        // Case-insensitive compare - MySQL may lowercase table names on some OS
+        return strtolower($result) === strtolower($table);
     }
     
     /**
