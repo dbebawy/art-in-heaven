@@ -731,6 +731,14 @@ class AIH_Pushpay_API {
         $auth = AIH_Auth::get_instance();
         $bidder = $auth->get_bidder_by_email($order->bidder_id);
 
+        // Build return URL - redirect back to the site after payment
+        $return_url = get_option('aih_pushpay_return_url', '');
+        if (empty($return_url)) {
+            // Default to gallery page or home
+            $gallery_page = get_option('aih_gallery_page', '');
+            $return_url = $gallery_page ?: home_url('/');
+        }
+
         $params = array(
             'a' => number_format($order->total, 2, '.', ''),
             'al' => 'true',          // Lock the amount
@@ -739,6 +747,7 @@ class AIH_Pushpay_API {
             'fndv' => 'lock',        // Lock the fund selection
             'sr' => $order->order_number, // Source reference for tracking
             'nt' => $order->order_number, // Note field with order number
+            'r' => $return_url,      // Return URL after payment
         );
 
         if ($bidder) {

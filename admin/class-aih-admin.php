@@ -333,6 +333,7 @@ class AIH_Admin {
         register_setting('aih_integrations', 'aih_pushpay_merchant_key');
         register_setting('aih_integrations', 'aih_pushpay_merchant_handle');
         register_setting('aih_integrations', 'aih_pushpay_fund');
+        register_setting('aih_integrations', 'aih_pushpay_return_url');
         register_setting('aih_integrations', 'aih_pushpay_client_id');
         register_setting('aih_integrations', 'aih_pushpay_client_secret');
         register_setting('aih_integrations', 'aih_pushpay_organization_key');

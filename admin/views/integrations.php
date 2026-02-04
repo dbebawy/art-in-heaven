@@ -314,6 +314,13 @@ $is_sandbox = get_option('aih_pushpay_sandbox', 0);
                         <p class="description"><?php _e('The fund/category name for auction payments in Pushpay. Required when Pushpay credentials are configured.', 'art-in-heaven'); ?></p>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row"><label for="aih_pushpay_return_url"><?php _e('Return URL', 'art-in-heaven'); ?></label></th>
+                    <td>
+                        <input type="url" id="aih_pushpay_return_url" name="aih_pushpay_return_url" value="<?php echo esc_attr(get_option('aih_pushpay_return_url', '')); ?>" class="regular-text" placeholder="<?php echo esc_attr(home_url('/')); ?>">
+                        <p class="description"><?php _e('Where to redirect users after completing payment. Leave blank to use the gallery page or homepage.', 'art-in-heaven'); ?></p>
+                    </td>
+                </tr>
             </table>
             
             <div class="aih-info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
