@@ -31,53 +31,64 @@ class AIH_Admin {
     }
     
     public function add_admin_menus() {
-        // Main menu - accessible to anyone with art management capability
+        // Main menu - accessible to anyone with any AIH capability
         $menu_cap = AIH_Roles::get_menu_capability();
-        
+
+        // Pickup-only users land directly on the pickup page
+        $default_slug = 'art-in-heaven';
+        $default_render = array($this, 'render_dashboard');
+        if (AIH_Roles::can_manage_pickup() && !AIH_Roles::can_manage_art() && !AIH_Roles::can_manage_auction()) {
+            $default_slug = 'art-in-heaven-pickup';
+            $default_render = array($this, 'render_pickup');
+            $menu_cap = AIH_Roles::CAP_MANAGE_PICKUP;
+        }
+
         add_menu_page(
             __('Art in Heaven', 'art-in-heaven'),
             __('Art in Heaven', 'art-in-heaven'),
             $menu_cap,
-            'art-in-heaven',
-            array($this, 'render_dashboard'),
+            $default_slug,
+            $default_render,
             AIH_PLUGIN_URL . 'assets/images/icon-20.png',
             30
         );
-        
+
         // Dashboard - art managers see limited version, super admins see full stats
-        add_submenu_page(
-            'art-in-heaven',
-            __('Dashboard', 'art-in-heaven'),
-            __('Dashboard', 'art-in-heaven'),
-            $menu_cap,
-            'art-in-heaven',
-            array($this, 'render_dashboard')
-        );
+        if (AIH_Roles::can_manage_art() || AIH_Roles::can_manage_auction()) {
+            add_submenu_page(
+                $default_slug,
+                __('Dashboard', 'art-in-heaven'),
+                __('Dashboard', 'art-in-heaven'),
+                AIH_Roles::CAP_MANAGE_ART,
+                'art-in-heaven',
+                array($this, 'render_dashboard')
+            );
+        }
         
         // Art Pieces - accessible to art managers
         add_submenu_page(
-            'art-in-heaven',
+            $default_slug,
             __('Art Pieces', 'art-in-heaven'),
             __('Art Pieces', 'art-in-heaven'),
             AIH_Roles::CAP_MANAGE_ART,
             'art-in-heaven-art',
             array($this, 'render_art_pieces')
         );
-        
+
         // Add New Art - accessible to art managers
         add_submenu_page(
-            'art-in-heaven',
+            $default_slug,
             __('Add New Art', 'art-in-heaven'),
             __('Add New', 'art-in-heaven'),
             AIH_Roles::CAP_MANAGE_ART,
             'art-in-heaven-add',
             array($this, 'render_add_art')
         );
-        
+
         // Bids - requires view bids access
         if (AIH_Roles::can_view_bids()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Bids', 'art-in-heaven'),
                 __('Bids', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_BIDS,
@@ -85,52 +96,54 @@ class AIH_Admin {
                 array($this, 'render_bids')
             );
         }
-        
+
         // Orders - requires financial access (super admin only)
         if (AIH_Roles::can_view_financial()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Orders & Payments', 'art-in-heaven'),
                 __('Orders', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_FINANCIAL,
                 'art-in-heaven-orders',
                 array($this, 'render_orders')
             );
-            
+
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Payments', 'art-in-heaven'),
                 __('Payments', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_FINANCIAL,
                 'art-in-heaven-payments',
                 array($this, 'render_payments')
             );
-            
+
             // Winners & Sales - requires financial access
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Winners & Sales', 'art-in-heaven'),
                 __('Winners', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_FINANCIAL,
                 'art-in-heaven-winners',
                 array($this, 'render_winners')
             );
-            
-            // Pickup - requires financial access
+        }
+
+        // Pickup - requires pickup or financial access
+        if (AIH_Roles::can_manage_pickup()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Pickup', 'art-in-heaven'),
                 __('Pickup', 'art-in-heaven'),
-                AIH_Roles::CAP_VIEW_FINANCIAL,
+                AIH_Roles::CAP_MANAGE_PICKUP,
                 'art-in-heaven-pickup',
                 array($this, 'render_pickup')
             );
         }
-        
+
         // Bidders - requires bidder management access (super admin only)
         if (AIH_Roles::can_manage_bidders()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Bidders', 'art-in-heaven'),
                 __('Bidders', 'art-in-heaven'),
                 AIH_Roles::CAP_MANAGE_BIDDERS,
@@ -138,20 +151,20 @@ class AIH_Admin {
                 array($this, 'render_bidders')
             );
         }
-        
+
         // Reports - requires reports access (super admin only)
         if (AIH_Roles::can_view_reports()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Reports', 'art-in-heaven'),
                 __('Reports', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_REPORTS,
                 'art-in-heaven-reports',
                 array($this, 'render_reports')
             );
-            
+
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Engagement Stats', 'art-in-heaven'),
                 __('Engagement Stats', 'art-in-heaven'),
                 AIH_Roles::CAP_VIEW_REPORTS,
@@ -159,11 +172,11 @@ class AIH_Admin {
                 array($this, 'render_stats')
             );
         }
-        
+
         // Migration - requires full auction management (super admin only)
         if (AIH_Roles::can_manage_auction()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Migration', 'art-in-heaven'),
                 __('Migration', 'art-in-heaven'),
                 AIH_Roles::CAP_MANAGE_AUCTION,
@@ -171,20 +184,20 @@ class AIH_Admin {
                 array($this, 'render_migration')
             );
         }
-        
+
         // Integrations - requires settings access (super admin only)
         if (AIH_Roles::can_manage_settings()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Integrations', 'art-in-heaven'),
                 __('Integrations', 'art-in-heaven'),
                 AIH_Roles::CAP_MANAGE_SETTINGS,
                 'art-in-heaven-integrations',
                 array($this, 'render_integrations')
             );
-            
+
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Transactions', 'art-in-heaven'),
                 __('Transactions', 'art-in-heaven'),
                 AIH_Roles::CAP_MANAGE_SETTINGS,
@@ -192,11 +205,11 @@ class AIH_Admin {
                 array($this, 'render_transactions')
             );
         }
-        
+
         // Settings - requires settings access (super admin only)
         if (AIH_Roles::can_manage_settings()) {
             add_submenu_page(
-                'art-in-heaven',
+                $default_slug,
                 __('Settings', 'art-in-heaven'),
                 __('Settings', 'art-in-heaven'),
                 AIH_Roles::CAP_MANAGE_SETTINGS,
@@ -491,7 +504,7 @@ class AIH_Admin {
     }
 
     public function render_pickup() {
-        if (!AIH_Roles::can_view_financial()) {
+        if (!AIH_Roles::can_manage_pickup()) {
             wp_die(__('You do not have permission to access this page.', 'art-in-heaven'));
         }
         include AIH_PLUGIN_DIR . 'admin/views/pickup.php';

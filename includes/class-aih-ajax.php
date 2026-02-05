@@ -939,10 +939,10 @@ class AIH_Ajax {
     public function admin_update_pickup_status() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
-        if (!AIH_Roles::can_view_financial()) {
+        if (!AIH_Roles::can_manage_pickup()) {
             wp_send_json_error(array('message' => 'Permission denied.'));
         }
-        
+
         $order_id = intval($_POST['order_id'] ?? 0);
         $status = sanitize_text_field($_POST['status'] ?? '');
         $pickup_by = sanitize_text_field($_POST['pickup_by'] ?? '');
