@@ -2,6 +2,7 @@
 app/
 conf/
 logs/
+nginx-config.conf
 
 # OS files
 .DS_Store
