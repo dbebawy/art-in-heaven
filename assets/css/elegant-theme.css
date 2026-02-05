@@ -1062,10 +1062,6 @@ html body {
     gap: 4px;
 }
 
-.aih-card-bid.aih-bid-hidden {
-    visibility: hidden;
-}
-
 .aih-card-bid .aih-bid-label {
     font-size: 10px;
     text-transform: uppercase;
