@@ -128,6 +128,7 @@ class Art_In_Heaven {
         add_action('init', array($this, 'init'), 0);
         add_action('rest_api_init', array($this, 'init_rest_api'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        add_action('wp_head', array($this, 'add_preconnect_hints'), 1);
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
         // Privacy/GDPR
@@ -380,15 +381,18 @@ class Art_In_Heaven {
      * Enqueue frontend assets
      */
     public function enqueue_frontend_assets() {
-        // Load Google Fonts
+        // Google Fonts
         wp_enqueue_style(
             'aih-google-fonts',
-            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap',
             array(),
             null
         );
-        
-        wp_enqueue_style('aih-frontend', AIH_PLUGIN_URL . 'assets/css/aih-frontend.css', array('aih-google-fonts'), AIH_VERSION);
+
+        // Elegant theme CSS (loaded in <head> to prevent FOUC)
+        wp_enqueue_style('aih-elegant-theme', AIH_PLUGIN_URL . 'assets/css/elegant-theme.css', array('aih-google-fonts'), AIH_VERSION);
+
+        wp_enqueue_style('aih-frontend', AIH_PLUGIN_URL . 'assets/css/aih-frontend.css', array('aih-elegant-theme'), AIH_VERSION);
         wp_enqueue_script('aih-frontend', AIH_PLUGIN_URL . 'assets/js/aih-frontend.js', array('jquery'), AIH_VERSION, true);
         
         // Add custom color CSS
@@ -422,6 +426,14 @@ class Art_In_Heaven {
         ));
     }
     
+    /**
+     * Add preconnect hints for Google Fonts
+     */
+    public function add_preconnect_hints() {
+        echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
+        echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+    }
+
     /**
      * Generate custom color CSS from settings
      */

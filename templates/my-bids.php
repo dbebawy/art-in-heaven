@@ -64,7 +64,7 @@ jQuery(document).ready(function($) {
         .on('input', function() { this.value = this.value.toUpperCase(); });
 });
 </script>
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); return; endif;
+<?php return; endif;
 
 // Get user's bids - returns only the highest valid bid per art piece
 $bid_model = new AIH_Bid();
@@ -333,8 +333,6 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>
 
 <style>
 /* My Bids Page Specific Styles */

@@ -61,10 +61,8 @@ jQuery(document).ready(function($) {
         .on('input', function() { this.value = this.value.toUpperCase(); });
 });
 </script>
-<?php 
-// Include elegant styles
-include(dirname(__FILE__) . '/../assets/css/elegant-theme.php');
-return; 
+<?php
+return;
 endif;
 
 // Get page URLs using consolidated helper
@@ -638,4 +636,4 @@ jQuery(document).ready(function($) {
 });
 </script>
 
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>
+

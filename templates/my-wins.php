@@ -65,7 +65,7 @@ jQuery(document).ready(function($) {
         .on('input', function() { this.value = this.value.toUpperCase(); });
 });
 </script>
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); return; endif;
+<?php return; endif;
 
 // Get purchased items from paid orders
 global $wpdb;
@@ -214,8 +214,6 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>
 
 <style>
 /* My Wins Page Styles */

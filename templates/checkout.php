@@ -64,7 +64,7 @@ jQuery(document).ready(function($) {
         .on('input', function() { this.value = this.value.toUpperCase(); });
 });
 </script>
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); return; endif;
+<?php return; endif;
 
 // Get won items
 $checkout = AIH_Checkout::get_instance();
@@ -329,8 +329,6 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>
 
 <style>
 .aih-checkout-layout {

@@ -108,4 +108,3 @@ jQuery(document).ready(function($) {
 });
 </script>
 
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>

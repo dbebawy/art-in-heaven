@@ -64,7 +64,7 @@ jQuery(document).ready(function($) {
         .on('input', function() { this.value = this.value.toUpperCase(); });
 });
 </script>
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); return; endif;
+<?php return; endif;
 
 // Get art piece
 $favorites = new AIH_Favorites();
@@ -570,8 +570,6 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-
-<?php include(dirname(__FILE__) . '/../assets/css/elegant-theme.php'); ?>
 
 <style>
 /* Single Item Page Overrides */
