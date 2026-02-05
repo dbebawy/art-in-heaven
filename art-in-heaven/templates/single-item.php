@@ -253,6 +253,19 @@ $cart_count = count($checkout->get_won_items($bidder_id));
                         </div>
                         <?php endif; ?>
 
+                        <div class="aih-bid-info">
+                            <div class="aih-bid-info-row">
+                                <span class="aih-bid-label">Starting Bid</span>
+                                <span class="aih-bid-amount">$<?php echo number_format($art_piece->starting_bid); ?></span>
+                            </div>
+                            <?php if ($has_bids): ?>
+                            <div class="aih-bid-info-row aih-current-bid-row">
+                                <span class="aih-bid-label">Current Bid</span>
+                                <span class="aih-bid-amount">$<?php echo number_format($current_bid); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
                         <div class="aih-bid-form-single">
                             <div class="aih-field">
                                 <label>Your Bid</label>
@@ -856,6 +869,40 @@ jQuery(document).ready(function($) {
     padding: 20px;
     border: 1px solid var(--color-border);
     margin-bottom: 20px;
+}
+
+.aih-bid-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-bid-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.aih-bid-info-row .aih-bid-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-bid-info-row .aih-bid-amount {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.aih-bid-info-row.aih-current-bid-row .aih-bid-amount {
+    color: var(--color-accent);
+    font-size: 24px;
 }
 
 .aih-current-bid {
