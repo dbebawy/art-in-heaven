@@ -110,6 +110,13 @@ class AIH_Ajax {
     
     public function verify_confirmation_code() {
         check_ajax_referer('aih_nonce', 'nonce');
+
+        // Rate limiting: 5 attempts per 60 seconds
+        $ip = AIH_Security::get_client_ip();
+        if (!AIH_Security::check_rate_limit('ajax_auth_' . $ip, 5, 60)) {
+            wp_send_json_error(array('message' => __('Too many attempts. Please wait.', 'art-in-heaven')));
+        }
+
         $code = isset($_POST['code']) ? sanitize_text_field($_POST['code']) : '';
         if (empty($code)) wp_send_json_error(array('message' => __('Please enter your confirmation code.', 'art-in-heaven')));
         
@@ -155,7 +162,12 @@ class AIH_Ajax {
         check_ajax_referer('aih_nonce', 'nonce');
         $auth = AIH_Auth::get_instance();
         if (!$auth->is_logged_in()) wp_send_json_error(array('message' => __('Please sign in.', 'art-in-heaven'), 'login_required' => true));
-        
+
+        // Rate limiting: 10 bids per 60 seconds
+        if (!AIH_Security::check_rate_limit('ajax_bid_' . $auth->get_current_bidder_id(), 10, 60)) {
+            wp_send_json_error(array('message' => __('Too many bid attempts. Please wait.', 'art-in-heaven')));
+        }
+
         $art_piece_id = intval($_POST['art_piece_id'] ?? 0);
         $bid_amount = floatval($_POST['bid_amount'] ?? 0);
         if (!$art_piece_id || $bid_amount <= 0) wp_send_json_error(array('message' => __('Invalid bid.', 'art-in-heaven')));
@@ -175,7 +187,7 @@ class AIH_Ajax {
         if (!$auth->is_logged_in()) wp_send_json_error(array('login_required' => true));
         
         $art_piece_id = intval($_POST['art_piece_id'] ?? 0);
-        if (!$art_piece_id) wp_send_json_error(array('message' => 'Invalid.'));
+        if (!$art_piece_id) wp_send_json_error(array('message' => __('Invalid.', 'art-in-heaven')));
         
         wp_send_json_success((new AIH_Favorites())->toggle($auth->get_current_bidder_id(), $art_piece_id));
     }
@@ -204,10 +216,10 @@ class AIH_Ajax {
     public function get_art_details() {
         check_ajax_referer('aih_nonce', 'nonce');
         $art_id = intval($_POST['art_id'] ?? 0);
-        if (!$art_id) wp_send_json_error(array('message' => 'Invalid.'));
+        if (!$art_id) wp_send_json_error(array('message' => __('Invalid.', 'art-in-heaven')));
 
         $piece = (new AIH_Art_Piece())->get($art_id);
-        if (!$piece) wp_send_json_error(array('message' => 'Not found.'));
+        if (!$piece) wp_send_json_error(array('message' => __('Not found.', 'art-in-heaven')));
 
         $auth = AIH_Auth::get_instance();
         $bidder_id = $auth->get_current_bidder_id();
@@ -266,7 +278,12 @@ class AIH_Ajax {
         check_ajax_referer('aih_nonce', 'nonce');
         $auth = AIH_Auth::get_instance();
         if (!$auth->is_logged_in()) wp_send_json_error(array('login_required' => true));
-        
+
+        // Rate limiting: 5 orders per 60 seconds
+        if (!AIH_Security::check_rate_limit('ajax_order_' . $auth->get_current_bidder_id(), 5, 60)) {
+            wp_send_json_error(array('message' => __('Too many order attempts. Please wait.', 'art-in-heaven')));
+        }
+
         $result = AIH_Checkout::get_instance()->create_order($auth->get_current_bidder_id());
         if ($result['success']) wp_send_json_success($result);
         wp_send_json_error($result);
@@ -279,7 +296,7 @@ class AIH_Ajax {
 
         $checkout = AIH_Checkout::get_instance();
         $order = $checkout->get_order_by_number(sanitize_text_field($_POST['order_number'] ?? ''));
-        if (!$order) wp_send_json_error(array('message' => 'Order not found.'));
+        if (!$order) wp_send_json_error(array('message' => __('Order not found.', 'art-in-heaven')));
         wp_send_json_success(array('pushpay_url' => $checkout->get_pushpay_payment_url($order)));
     }
 
@@ -289,20 +306,20 @@ class AIH_Ajax {
     public function get_order_details() {
         check_ajax_referer('aih_nonce', 'nonce');
         $auth = AIH_Auth::get_instance();
-        if (!$auth->is_logged_in()) wp_send_json_error(array('message' => 'Session expired. Please refresh the page and sign in again.'));
+        if (!$auth->is_logged_in()) wp_send_json_error(array('message' => __('Session expired. Please refresh the page and sign in again.', 'art-in-heaven')));
 
         $order_number = sanitize_text_field($_POST['order_number'] ?? '');
-        if (empty($order_number)) wp_send_json_error(array('message' => 'Order number required.'));
+        if (empty($order_number)) wp_send_json_error(array('message' => __('Order number required.', 'art-in-heaven')));
 
         $checkout = AIH_Checkout::get_instance();
         $order = $checkout->get_order_by_number($order_number);
 
-        if (!$order) wp_send_json_error(array('message' => 'Order not found.'));
+        if (!$order) wp_send_json_error(array('message' => __('Order not found.', 'art-in-heaven')));
 
         // Verify this order belongs to the current bidder
         $current_bidder = $auth->get_current_bidder_id();
         if ($order->bidder_id != $current_bidder) {
-            wp_send_json_error(array('message' => 'Order does not belong to this account.'));
+            wp_send_json_error(array('message' => __('Order does not belong to this account.', 'art-in-heaven')));
         }
 
         // Format items for response
@@ -403,7 +420,7 @@ class AIH_Ajax {
     
     public function admin_save_art() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         $art_model = new AIH_Art_Piece();
         $watermark = new AIH_Watermark();
@@ -442,11 +459,19 @@ class AIH_Ajax {
             if (strlen($auction_start) === 16) {
                 $auction_start .= ':00'; // Add seconds
             }
+            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $auction_start);
+            if (!$dt || $dt->format('Y-m-d H:i:s') !== $auction_start) {
+                wp_send_json_error(array('message' => __('Invalid auction start date format.', 'art-in-heaven')));
+            }
         }
         if (!empty($auction_end)) {
             $auction_end = str_replace('T', ' ', $auction_end);
             if (strlen($auction_end) === 16) {
                 $auction_end .= ':00'; // Add seconds
+            }
+            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $auction_end);
+            if (!$dt || $dt->format('Y-m-d H:i:s') !== $auction_end) {
+                wp_send_json_error(array('message' => __('Invalid auction end date format.', 'art-in-heaven')));
             }
         }
         
@@ -563,39 +588,39 @@ class AIH_Ajax {
     
     public function admin_delete_art() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $art_id = intval($_POST['id'] ?? 0);
-        if (!$art_id) wp_send_json_error(array('message' => 'Invalid.'));
+        if (!$art_id) wp_send_json_error(array('message' => __('Invalid.', 'art-in-heaven')));
         (new AIH_Art_Piece())->delete($art_id);
-        wp_send_json_success(array('message' => 'Deleted.'));
+        wp_send_json_success(array('message' => __('Deleted.', 'art-in-heaven')));
     }
     
     public function admin_bulk_update_times() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $ids = array_map('intval', $_POST['ids'] ?? array());
         $new_end_time = sanitize_text_field($_POST['new_end_time'] ?? '');
-        if (empty($ids) || empty($new_end_time)) wp_send_json_error(array('message' => 'Missing data.'));
+        if (empty($ids) || empty($new_end_time)) wp_send_json_error(array('message' => __('Missing data.', 'art-in-heaven')));
         (new AIH_Art_Piece())->bulk_update_end_times($ids, $new_end_time);
         wp_send_json_success(array('message' => count($ids) . ' items updated.'));
     }
     
     public function admin_bulk_update_start_times() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $ids = array_map('intval', $_POST['ids'] ?? array());
         $new_start_time = sanitize_text_field($_POST['new_start_time'] ?? '');
-        if (empty($ids) || empty($new_start_time)) wp_send_json_error(array('message' => 'Missing data.'));
+        if (empty($ids) || empty($new_start_time)) wp_send_json_error(array('message' => __('Missing data.', 'art-in-heaven')));
         (new AIH_Art_Piece())->bulk_update_start_times($ids, $new_start_time);
         wp_send_json_success(array('message' => count($ids) . ' items updated.'));
     }
     
     public function admin_bulk_show_end_time() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $ids = array_map('intval', $_POST['ids'] ?? array());
         $show = isset($_POST['show']) && $_POST['show'] == '1' ? 1 : 0;
-        if (empty($ids)) wp_send_json_error(array('message' => 'No items selected.'));
+        if (empty($ids)) wp_send_json_error(array('message' => __('No items selected.', 'art-in-heaven')));
         
         global $wpdb;
         $table = AIH_Database::get_table('art_pieces');
@@ -612,23 +637,27 @@ class AIH_Ajax {
         }
         
         $placeholders = implode(',', array_fill(0, count($ids), '%d'));
-        $wpdb->query($wpdb->prepare(
+        $result = $wpdb->query($wpdb->prepare(
             "UPDATE $table SET show_end_time = %d WHERE id IN ($placeholders)",
             array_merge(array($show), $ids)
         ));
-        
+
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Database error updating end time visibility.', 'art-in-heaven')));
+        }
+
         $action = $show ? __('revealed', 'art-in-heaven') : __('hidden', 'art-in-heaven');
         wp_send_json_success(array('message' => sprintf(__('End times %s for %d items.', 'art-in-heaven'), $action, count($ids))));
     }
     
     public function admin_toggle_end_time() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         $id = intval($_POST['id'] ?? 0);
         $show = isset($_POST['show']) && $_POST['show'] == '1' ? 1 : 0;
         
-        if (!$id) wp_send_json_error(array('message' => 'Invalid item.'));
+        if (!$id) wp_send_json_error(array('message' => __('Invalid item.', 'art-in-heaven')));
         
         global $wpdb;
         $table = AIH_Database::get_table('art_pieces');
@@ -648,7 +677,7 @@ class AIH_Ajax {
         $result = $wpdb->update($table, array('show_end_time' => $show), array('id' => $id), array('%d'), array('%d'));
         
         if ($result === false) {
-            wp_send_json_error(array('message' => 'Database error: ' . $wpdb->last_error));
+            wp_send_json_error(array('message' => __('Database error: ', 'art-in-heaven') . $wpdb->last_error));
         }
         
         wp_send_json_success(array(
@@ -662,7 +691,7 @@ class AIH_Ajax {
      */
     public function admin_inline_edit() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         $id = intval($_POST['id'] ?? 0);
         $field = sanitize_key($_POST['field'] ?? '');
@@ -671,7 +700,7 @@ class AIH_Ajax {
         $value = sanitize_text_field($raw_value);
         
         if (!$id || !$field) {
-            wp_send_json_error(array('message' => 'Invalid request.'));
+            wp_send_json_error(array('message' => __('Invalid request.', 'art-in-heaven')));
         }
         
         // Allowed fields for inline editing
@@ -688,7 +717,7 @@ class AIH_Ajax {
         );
         
         if (!isset($allowed_fields[$field])) {
-            wp_send_json_error(array('message' => 'Field not editable.'));
+            wp_send_json_error(array('message' => __('Field not editable.', 'art-in-heaven')));
         }
         
         // Apply field-specific sanitization (overrides default sanitize_text_field above)
@@ -701,6 +730,10 @@ class AIH_Ajax {
                 // Convert datetime-local format to MySQL format
                 $value = str_replace('T', ' ', $value);
                 if (strlen($value) === 16) $value .= ':00'; // Add seconds if missing
+                $dt = DateTime::createFromFormat('Y-m-d H:i:s', $value);
+                if (!$dt || $dt->format('Y-m-d H:i:s') !== $value) {
+                    wp_send_json_error(array('message' => __('Invalid date format.', 'art-in-heaven')));
+                }
                 break;
             case 'show_end_time':
                 $value = intval($value);
@@ -726,7 +759,7 @@ class AIH_Ajax {
         }
 
         if ($result === false) {
-            wp_send_json_error(array('message' => 'Database error: ' . $wpdb->last_error));
+            wp_send_json_error(array('message' => __('Database error: ', 'art-in-heaven') . $wpdb->last_error));
         }
 
         // Format the display value for return
@@ -802,49 +835,63 @@ class AIH_Ajax {
     
     public function admin_apply_event_date() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_settings()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_settings()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $event_date = get_option('aih_event_date', '');
-        if (empty($event_date)) wp_send_json_error(array('message' => 'Event date not set.'));
+        if (empty($event_date)) wp_send_json_error(array('message' => __('Event date not set.', 'art-in-heaven')));
         
         global $wpdb;
         $table = AIH_Database::get_table('art_pieces');
         $updated = $wpdb->query($wpdb->prepare("UPDATE $table SET auction_start = %s WHERE status = 'active'", date('Y-m-d H:i:s', strtotime($event_date))));
+        if ($updated === false) {
+            wp_send_json_error(array('message' => __('Database error applying event date.', 'art-in-heaven')));
+        }
         wp_send_json_success(array('message' => sprintf('%d art pieces updated.', $updated)));
     }
     
     public function admin_process_watermark() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $image_id = intval($_POST['image_id'] ?? 0);
-        if (!$image_id) wp_send_json_error(array('message' => 'Invalid.'));
+        if (!$image_id) wp_send_json_error(array('message' => __('Invalid.', 'art-in-heaven')));
         $url = (new AIH_Watermark())->process_upload($image_id);
         if ($url) wp_send_json_success(array('watermarked_url' => $url));
-        wp_send_json_error(array('message' => 'Failed.'));
+        wp_send_json_error(array('message' => __('Failed.', 'art-in-heaven')));
     }
     
     public function admin_get_stats() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_art()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         wp_send_json_success((new AIH_Art_Piece())->get_all_with_stats());
     }
     
     public function admin_update_payment() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_view_financial()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_view_financial()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $order_id = intval($_POST['order_id'] ?? 0);
         $status = sanitize_text_field($_POST['status'] ?? '');
-        if (!$order_id || !$status) wp_send_json_error(array('message' => 'Missing data.'));
+        if (!$order_id || !$status) wp_send_json_error(array('message' => __('Missing data.', 'art-in-heaven')));
         AIH_Checkout::get_instance()->update_payment_status($order_id, $status, sanitize_text_field($_POST['method'] ?? ''), sanitize_text_field($_POST['reference'] ?? ''), sanitize_textarea_field($_POST['notes'] ?? ''));
+
+        // Audit log
+        AIH_Database::log_audit('payment_updated', array(
+            'object_type' => 'order',
+            'object_id' => $order_id,
+            'details' => array(
+                'new_status' => $status,
+                'method' => sanitize_text_field($_POST['method'] ?? ''),
+            ),
+        ));
+
         wp_send_json_success(array('message' => 'Updated.'));
     }
     
     public function admin_delete_order() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_view_financial()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_view_financial()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $order_id = intval($_POST['order_id'] ?? 0);
-        if (!$order_id) wp_send_json_error(array('message' => 'Invalid.'));
+        if (!$order_id) wp_send_json_error(array('message' => __('Invalid.', 'art-in-heaven')));
         AIH_Checkout::get_instance()->delete_order($order_id);
-        wp_send_json_success(array('message' => 'Deleted.'));
+        wp_send_json_success(array('message' => __('Deleted.', 'art-in-heaven')));
     }
     
     /**
@@ -854,12 +901,12 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_manage_auction()) {
-            wp_send_json_error(array('message' => 'Permission denied. Only super admins can delete bids.'));
+            wp_send_json_error(array('message' => __('Permission denied. Only super admins can delete bids.', 'art-in-heaven')));
         }
         
         $bid_id = intval($_POST['bid_id'] ?? 0);
         if (!$bid_id) {
-            wp_send_json_error(array('message' => 'Invalid bid ID.'));
+            wp_send_json_error(array('message' => __('Invalid bid ID.', 'art-in-heaven')));
         }
         
         global $wpdb;
@@ -873,7 +920,7 @@ class AIH_Ajax {
         ));
         
         if (!$bid) {
-            wp_send_json_error(array('message' => 'Bid not found.'));
+            wp_send_json_error(array('message' => __('Bid not found.', 'art-in-heaven')));
         }
         
         // Store bidder_id for later check
@@ -887,7 +934,7 @@ class AIH_Ajax {
         $deleted = $wpdb->delete($bids_table, array('id' => $bid_id), array('%d'));
         
         if (!$deleted) {
-            wp_send_json_error(array('message' => 'Failed to delete bid.'));
+            wp_send_json_error(array('message' => __('Failed to delete bid.', 'art-in-heaven')));
         }
         
         // If this was the winning bid, set the next highest bid as winning
@@ -898,16 +945,19 @@ class AIH_Ajax {
             ));
             
             if ($next_highest) {
-                $wpdb->update(
+                $update_result = $wpdb->update(
                     $bids_table,
                     array('is_winning' => 1),
                     array('id' => $next_highest->id),
                     array('%d'),
                     array('%d')
                 );
+                if ($update_result === false) {
+                    wp_send_json_error(array('message' => __('Failed to update winning bid status.', 'art-in-heaven')));
+                }
             }
         }
-        
+
         // Check if bidder still has any bids, update has_bid flag accordingly
         $remaining_bids = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$bids_table} WHERE bidder_id = %s",
@@ -925,11 +975,23 @@ class AIH_Ajax {
             );
         }
         
+        // Audit log
+        AIH_Database::log_audit('bid_deleted', array(
+            'object_type' => 'bid',
+            'object_id' => $bid_id,
+            'bidder_id' => $bidder_id,
+            'details' => array(
+                'art_piece_id' => $art_piece_id,
+                'bid_amount' => $bid->bid_amount,
+                'was_winning' => $was_winning,
+            ),
+        ));
+
         // Invalidate cache
         if (class_exists('AIH_Cache')) {
             AIH_Cache::delete_group('bids');
         }
-        
+
         wp_send_json_success(array('message' => 'Bid deleted successfully.'));
     }
     
@@ -940,7 +1002,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_manage_pickup()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
 
         $order_id = intval($_POST['order_id'] ?? 0);
@@ -949,16 +1011,16 @@ class AIH_Ajax {
         $pickup_notes = sanitize_textarea_field($_POST['pickup_notes'] ?? '');
         
         if (!$order_id) {
-            wp_send_json_error(array('message' => 'Invalid order ID.'));
+            wp_send_json_error(array('message' => __('Invalid order ID.', 'art-in-heaven')));
         }
         
         if (!in_array($status, array('pending', 'picked_up'))) {
-            wp_send_json_error(array('message' => 'Invalid status.'));
+            wp_send_json_error(array('message' => __('Invalid status.', 'art-in-heaven')));
         }
         
         // Require name when marking as picked up
         if ($status === 'picked_up' && empty($pickup_by)) {
-            wp_send_json_error(array('message' => 'Name is required when marking as picked up.'));
+            wp_send_json_error(array('message' => __('Name is required when marking as picked up.', 'art-in-heaven')));
         }
         
         global $wpdb;
@@ -971,11 +1033,11 @@ class AIH_Ajax {
         ));
         
         if (!$order) {
-            wp_send_json_error(array('message' => 'Order not found.'));
+            wp_send_json_error(array('message' => __('Order not found.', 'art-in-heaven')));
         }
         
         if ($order->payment_status !== 'paid') {
-            wp_send_json_error(array('message' => 'Order must be paid before marking as picked up.'));
+            wp_send_json_error(array('message' => __('Order must be paid before marking as picked up.', 'art-in-heaven')));
         }
         
         // Update pickup status
@@ -1001,9 +1063,19 @@ class AIH_Ajax {
         );
         
         if ($result === false) {
-            wp_send_json_error(array('message' => 'Database error.'));
+            wp_send_json_error(array('message' => __('Database error.', 'art-in-heaven')));
         }
         
+        // Audit log
+        AIH_Database::log_audit('pickup_updated', array(
+            'object_type' => 'order',
+            'object_id' => $order_id,
+            'details' => array(
+                'new_status' => $status,
+                'pickup_by' => $pickup_by,
+            ),
+        ));
+
         wp_send_json_success(array(
             'message' => $status === 'picked_up' ? 'Marked as picked up.' : 'Pickup status reset.',
             'status' => $status
@@ -1012,7 +1084,7 @@ class AIH_Ajax {
     
     public function admin_test_api() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_settings()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_settings()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $result = AIH_Auth::get_instance()->test_api_connection();
         if ($result['success']) wp_send_json_success($result);
         wp_send_json_error($result);
@@ -1020,7 +1092,7 @@ class AIH_Ajax {
     
     public function admin_create_tables() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         $year = intval($_POST['year'] ?? date('Y'));
         AIH_Database::create_tables($year);
         wp_send_json_success(array('message' => sprintf('Tables created for %d.', $year)));
@@ -1028,7 +1100,7 @@ class AIH_Ajax {
     
     public function admin_export_data() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_view_reports()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_view_reports()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         $type = sanitize_text_field($_POST['type'] ?? 'art');
         $art_model = new AIH_Art_Piece();
@@ -1053,7 +1125,7 @@ class AIH_Ajax {
     
     public function admin_sync_bidders() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_bidders()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_bidders()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         $auth = AIH_Auth::get_instance();
         $result = $auth->sync_bidders_from_api();
@@ -1066,7 +1138,7 @@ class AIH_Ajax {
     
     public function admin_cleanup_tables() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         
         global $wpdb;
         $year = AIH_Database::get_auction_year();
@@ -1093,6 +1165,10 @@ class AIH_Ajax {
         foreach ($column_map as $old_col => $new_col) {
             if (in_array($old_col, $existing_columns) && in_array($new_col, $existing_columns)) {
                 $migrated = $wpdb->query("UPDATE $table SET $new_col = $old_col WHERE ($new_col IS NULL OR $new_col = '') AND $old_col IS NOT NULL AND $old_col != ''");
+                if ($migrated === false) {
+                    $messages[] = sprintf(__('Error migrating %s: %s', 'art-in-heaven'), $old_col, $wpdb->last_error);
+                    continue;
+                }
                 if ($migrated > 0) {
                     $messages[] = "Migrated $migrated records from $old_col to $new_col";
                 }
@@ -1119,7 +1195,7 @@ class AIH_Ajax {
      */
     public function admin_purge_data() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
-        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => 'Permission denied.'));
+        if (!AIH_Roles::can_manage_auction()) wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
 
         global $wpdb;
 
@@ -1128,13 +1204,23 @@ class AIH_Ajax {
             'orders', 'order_items', 'audit_log', 'art_images', 'pushpay_transactions'
         );
 
+        // Audit log before purge (since audit_log table itself will be truncated)
+        AIH_Database::log_audit('data_purged', array(
+            'object_type' => 'system',
+            'details' => array('tables' => $tables),
+        ));
+
         $cleared = array();
         foreach ($tables as $key) {
             $table = AIH_Database::get_table($key);
             $count = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
             if ($count > 0) {
-                $wpdb->query("TRUNCATE TABLE $table");
-                $cleared[] = "$key ($count rows)";
+                $truncate_result = $wpdb->query("TRUNCATE TABLE $table");
+                if ($truncate_result === false) {
+                    $cleared[] = "$key (" . __('error', 'art-in-heaven') . ": " . $wpdb->last_error . ")";
+                } else {
+                    $cleared[] = "$key ($count rows)";
+                }
             }
         }
 
@@ -1163,19 +1249,19 @@ class AIH_Ajax {
     public function admin_add_image() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $art_piece_id = intval($_POST['art_piece_id'] ?? 0);
         $image_id = intval($_POST['image_id'] ?? 0);
         
         if (!$art_piece_id || !$image_id) {
-            wp_send_json_error(array('message' => 'Missing required fields. Art ID: ' . $art_piece_id . ', Image ID: ' . $image_id));
+            wp_send_json_error(array('message' => __('Missing required fields.', 'art-in-heaven') . ' Art ID: ' . $art_piece_id . ', Image ID: ' . $image_id));
         }
         
         $image_url = wp_get_attachment_url($image_id);
         if (!$image_url) {
-            wp_send_json_error(array('message' => 'Invalid image attachment.'));
+            wp_send_json_error(array('message' => __('Invalid image attachment.', 'art-in-heaven')));
         }
         
         // Check if table exists, if not create it
@@ -1188,7 +1274,7 @@ class AIH_Ajax {
             // Check again
             $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table}'");
             if (!$table_exists) {
-                wp_send_json_error(array('message' => 'Database table not found. Please go to Settings and click "Recreate Tables".'));
+                wp_send_json_error(array('message' => __('Database table not found. Please go to Settings and click "Recreate Tables".', 'art-in-heaven')));
             }
         }
         
@@ -1213,7 +1299,7 @@ class AIH_Ajax {
             ));
         } else {
             global $wpdb;
-            wp_send_json_error(array('message' => 'Failed to add image. DB Error: ' . $wpdb->last_error));
+            wp_send_json_error(array('message' => __('Failed to add image. DB Error: ', 'art-in-heaven') . $wpdb->last_error));
         }
     }
     
@@ -1223,14 +1309,14 @@ class AIH_Ajax {
     public function admin_remove_image() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $image_record_id = intval($_POST['image_record_id'] ?? 0);
         
         if (!$image_record_id) {
             error_log('AIH Remove Image: Missing image_record_id. POST data: ' . print_r($_POST, true));
-            wp_send_json_error(array('message' => 'Missing image ID.'));
+            wp_send_json_error(array('message' => __('Missing image ID.', 'art-in-heaven')));
         }
         
         error_log('AIH Remove Image: Attempting to remove image record ID: ' . $image_record_id);
@@ -1270,7 +1356,7 @@ class AIH_Ajax {
             ));
         } else {
             error_log('AIH Remove Image: Failed to remove image record ID: ' . $image_record_id);
-            wp_send_json_error(array('message' => 'Failed to remove image. It may have already been deleted.'));
+            wp_send_json_error(array('message' => __('Failed to remove image. It may have already been deleted.', 'art-in-heaven')));
         }
     }
     
@@ -1280,13 +1366,13 @@ class AIH_Ajax {
     public function admin_set_primary_image() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $image_record_id = intval($_POST['image_record_id'] ?? 0);
         
         if (!$image_record_id) {
-            wp_send_json_error(array('message' => 'Missing image ID.'));
+            wp_send_json_error(array('message' => __('Missing image ID.', 'art-in-heaven')));
         }
         
         $images_handler = new AIH_Art_Images();
@@ -1295,7 +1381,7 @@ class AIH_Ajax {
         if ($result) {
             wp_send_json_success(array('message' => 'Primary image updated.'));
         } else {
-            wp_send_json_error(array('message' => 'Failed to update primary image.'));
+            wp_send_json_error(array('message' => __('Failed to update primary image.', 'art-in-heaven')));
         }
     }
     
@@ -1305,13 +1391,13 @@ class AIH_Ajax {
     public function admin_reorder_images() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $image_ids = $_POST['image_ids'] ?? array();
         
         if (empty($image_ids) || !is_array($image_ids)) {
-            wp_send_json_error(array('message' => 'Missing image IDs.'));
+            wp_send_json_error(array('message' => __('Missing image IDs.', 'art-in-heaven')));
         }
         
         $images_handler = new AIH_Art_Images();
@@ -1320,7 +1406,7 @@ class AIH_Ajax {
         if ($result) {
             wp_send_json_success(array('message' => 'Order updated.'));
         } else {
-            wp_send_json_error(array('message' => 'Failed to update order.'));
+            wp_send_json_error(array('message' => __('Failed to update order.', 'art-in-heaven')));
         }
     }
     
@@ -1330,13 +1416,13 @@ class AIH_Ajax {
     public function admin_get_images() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $art_piece_id = intval($_POST['art_piece_id'] ?? 0);
         
         if (!$art_piece_id) {
-            wp_send_json_error(array('message' => 'Missing art piece ID.'));
+            wp_send_json_error(array('message' => __('Missing art piece ID.', 'art-in-heaven')));
         }
         
         $images_handler = new AIH_Art_Images();
@@ -1352,7 +1438,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $action = sanitize_text_field($_POST['flag_action'] ?? 'set');
@@ -1373,7 +1459,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_manage_settings()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $pushpay = AIH_Pushpay_API::get_instance();
@@ -1393,7 +1479,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
 
         if (!AIH_Roles::can_manage_settings()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
 
         $pushpay = AIH_Pushpay_API::get_instance();
@@ -1454,7 +1540,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_view_financial()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         // Increase execution time
@@ -1477,14 +1563,14 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_view_financial()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $transaction_id = intval($_POST['transaction_id'] ?? 0);
         $order_id = intval($_POST['order_id'] ?? 0);
         
         if (!$transaction_id || !$order_id) {
-            wp_send_json_error(array('message' => 'Missing transaction or order ID.'));
+            wp_send_json_error(array('message' => __('Missing transaction or order ID.', 'art-in-heaven')));
         }
         
         $pushpay = AIH_Pushpay_API::get_instance();
@@ -1504,12 +1590,12 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_view_financial()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         $id = intval($_POST['id'] ?? 0);
         if (!$id) {
-            wp_send_json_error(array('message' => 'Invalid transaction ID.'));
+            wp_send_json_error(array('message' => __('Invalid transaction ID.', 'art-in-heaven')));
         }
         
         global $wpdb;
@@ -1525,7 +1611,7 @@ class AIH_Ajax {
         ));
         
         if (!$txn) {
-            wp_send_json_error(array('message' => 'Transaction not found.'));
+            wp_send_json_error(array('message' => __('Transaction not found.', 'art-in-heaven')));
         }
         
         // Build HTML for modal
@@ -1579,7 +1665,7 @@ class AIH_Ajax {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
         if (!AIH_Roles::can_manage_art()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
+            wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         
         // Increase execution time and memory
@@ -1598,7 +1684,7 @@ class AIH_Ajax {
         
         $watermark = new AIH_Watermark();
         if (!$watermark->is_available()) {
-            wp_send_json_error(array('message' => 'GD library not available for watermarking.'));
+            wp_send_json_error(array('message' => __('GD library not available for watermarking.', 'art-in-heaven')));
         }
         
         $success_count = 0;
@@ -1735,7 +1821,10 @@ class AIH_Ajax {
             }
             $placeholders = implode(',', array_fill(0, count($ids), '%d'));
             $case_sql .= " END WHERE id IN ($placeholders)";
-            $wpdb->query($wpdb->prepare($case_sql, $ids));
+            $batch_result = $wpdb->query($wpdb->prepare($case_sql, $ids));
+            if ($batch_result === false) {
+                error_log('AIH: Batch image watermark update failed: ' . $wpdb->last_error);
+            }
         }
 
         // Batch write all art_pieces updates using CASE statement
@@ -1748,11 +1837,14 @@ class AIH_Ajax {
             }
             $placeholders = implode(',', array_fill(0, count($ids), '%d'));
             $case_sql .= " END WHERE id IN ($placeholders)";
-            $wpdb->query($wpdb->prepare($case_sql, $ids));
+            $batch_result = $wpdb->query($wpdb->prepare($case_sql, $ids));
+            if ($batch_result === false) {
+                error_log('AIH: Batch art piece watermark update failed: ' . $wpdb->last_error);
+            }
         }
-        
+
         if ($success_count == 0 && $error_count == 0 && $skipped_count == 0) {
-            wp_send_json_error(array('message' => 'No images found to process.'));
+            wp_send_json_error(array('message' => __('No images found to process.', 'art-in-heaven')));
         }
         
         $message = sprintf(__('Regenerated %d watermarks successfully.', 'art-in-heaven'), $success_count);

@@ -358,9 +358,12 @@ class Art_In_Heaven {
                 $now
             ));
 
-            // Clear cache if any records were updated
+            // Clear targeted caches if any records were updated
             if (($activated > 0 || $ended > 0) && class_exists('AIH_Cache')) {
-                AIH_Cache::flush_all();
+                $this->invalidate_art_cache();
+                if ($ended > 0) {
+                    $this->invalidate_bid_cache();
+                }
             }
         } catch (Exception $e) {
             // Log error but don't let cron fail

@@ -328,43 +328,62 @@ class AIH_Bid {
      */
     public function delete($bid_id) {
         global $wpdb;
-        
+
         // Get bid info first
         $bid = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$this->table} WHERE id = %d",
             $bid_id
         ));
-        
+
         if (!$bid) {
             return false;
         }
-        
-        // Delete the bid
-        $result = $wpdb->delete($this->table, array('id' => $bid_id), array('%d'));
-        
-        // If this was the winning bid, update the winning status
-        if ($bid->is_winning) {
-            // Find the next highest bid
-            $next_highest = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM {$this->table}
-                 WHERE art_piece_id = %d
-                 ORDER BY bid_amount DESC
-                 LIMIT 1",
-                $bid->art_piece_id
-            ));
-            
-            if ($next_highest) {
-                $wpdb->update(
-                    $this->table,
-                    array('is_winning' => 1),
-                    array('id' => $next_highest->id),
-                    array('%d'),
-                    array('%d')
-                );
+
+        $wpdb->query('START TRANSACTION');
+
+        try {
+            // Delete the bid
+            $result = $wpdb->delete($this->table, array('id' => $bid_id), array('%d'));
+
+            if ($result === false) {
+                $wpdb->query('ROLLBACK');
+                return false;
             }
+
+            // If this was the winning bid, update the winning status
+            if ($bid->is_winning) {
+                // Find the next highest bid
+                $next_highest = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$this->table}
+                     WHERE art_piece_id = %d
+                     ORDER BY bid_amount DESC
+                     LIMIT 1",
+                    $bid->art_piece_id
+                ));
+
+                if ($next_highest) {
+                    $update_result = $wpdb->update(
+                        $this->table,
+                        array('is_winning' => 1),
+                        array('id' => $next_highest->id),
+                        array('%d'),
+                        array('%d')
+                    );
+
+                    if ($update_result === false) {
+                        $wpdb->query('ROLLBACK');
+                        return false;
+                    }
+                }
+            }
+
+            $wpdb->query('COMMIT');
+            return $result;
+
+        } catch (Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return false;
         }
-        
-        return $result;
     }
     
     /**

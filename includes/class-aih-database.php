@@ -103,7 +103,9 @@ class AIH_Database {
             KEY is_winning (is_winning),
             KEY bid_status (bid_status),
             KEY art_winning (art_piece_id, is_winning),
-            KEY bidder_art (bidder_id, art_piece_id)
+            KEY bidder_art (bidder_id, art_piece_id),
+            KEY bidder_status (bidder_id, bid_status),
+            KEY art_status (art_piece_id, bid_status)
         ) $charset_collate;";
         
         // Favorites table - {Year}_Favorites

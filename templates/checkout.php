@@ -226,6 +226,11 @@ $total = $subtotal + $tax;
 </div>
 
 <script>
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 jQuery(document).ready(function($) {
     $('#aih-logout').on('click', function() {
         $.post(aihAjax.ajaxurl, {action:'aih_logout', nonce:aihAjax.nonce}, function() { location.reload(); });
@@ -262,14 +267,15 @@ jQuery(document).ready(function($) {
                 var data = r.data;
                 var html = '<div class="aih-order-modal-info">';
                 html += '<div class="aih-order-meta">';
-                html += '<span class="aih-order-status aih-status-' + data.payment_status + '">' + data.payment_status.charAt(0).toUpperCase() + data.payment_status.slice(1) + '</span>';
+                var safeStatus = escapeHtml(data.payment_status);
+                html += '<span class="aih-order-status aih-status-' + safeStatus + '">' + safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1) + '</span>';
                 if (data.pickup_status === 'picked_up') {
                     html += ' <span class="aih-pickup-badge">Picked Up</span>';
                 }
-                html += '<span class="aih-order-date">' + data.created_at + '</span>';
+                html += '<span class="aih-order-date">' + escapeHtml(data.created_at) + '</span>';
                 html += '</div>';
                 if (data.payment_reference) {
-                    html += '<div class="aih-order-txn"><span class="aih-txn-label">Transaction ID:</span> <span class="aih-txn-value">' + data.payment_reference + '</span></div>';
+                    html += '<div class="aih-order-txn"><span class="aih-txn-label">Transaction ID:</span> <span class="aih-txn-value">' + escapeHtml(data.payment_reference) + '</span></div>';
                 }
                 html += '</div>';
 
@@ -281,15 +287,15 @@ jQuery(document).ready(function($) {
                         html += '<div class="aih-order-item-row">';
                         html += '<div class="aih-order-item-image">';
                         if (item.image_url) {
-                            html += '<img src="' + item.image_url + '" alt="' + (item.title || '') + '">';
+                            html += '<img src="' + escapeHtml(item.image_url) + '" alt="' + escapeHtml(item.title || '') + '">';
                         }
                         if (item.art_id) {
-                            html += '<span class="aih-art-id-badge">' + item.art_id + '</span>';
+                            html += '<span class="aih-art-id-badge">' + escapeHtml(item.art_id) + '</span>';
                         }
                         html += '</div>';
                         html += '<div class="aih-order-item-info">';
-                        html += '<h5>' + (item.title || 'Untitled') + '</h5>';
-                        html += '<p>' + (item.artist || '') + '</p>';
+                        html += '<h5>' + escapeHtml(item.title || 'Untitled') + '</h5>';
+                        html += '<p>' + escapeHtml(item.artist || '') + '</p>';
                         html += '</div>';
                         html += '<div class="aih-order-item-price">$' + item.winning_bid.toLocaleString() + '</div>';
                         html += '</div>';
@@ -309,7 +315,7 @@ jQuery(document).ready(function($) {
                 $body.html(html);
             } else {
                 var msg = (r.data && r.data.message) ? r.data.message : 'Unknown error';
-                $body.html('<p class="aih-error">Error: ' + msg + '</p>');
+                $body.html('<p class="aih-error">Error: ' + escapeHtml(msg) + '</p>');
             }
         }).fail(function(xhr) {
             $body.html('<p class="aih-error">Request failed: ' + xhr.status + ' ' + xhr.statusText + '</p>');

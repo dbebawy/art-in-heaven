@@ -213,8 +213,7 @@ class AIH_Security {
                 return esc_textarea($value);
                 
             case 'sql':
-                global $wpdb;
-                return $wpdb->_real_escape($value);
+                return esc_sql($value);
                 
             case 'html':
             default:

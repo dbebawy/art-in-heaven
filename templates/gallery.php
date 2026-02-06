@@ -84,9 +84,11 @@ $art_images = new AIH_Art_Images();
 $artists = array();
 $mediums = array();
 foreach ($art_pieces as $piece) {
-    if (!empty($piece->artist) && !in_array($piece->artist, $artists)) $artists[] = $piece->artist;
-    if (!empty($piece->medium) && !in_array($piece->medium, $mediums)) $mediums[] = $piece->medium;
+    if (!empty($piece->artist)) $artists[] = $piece->artist;
+    if (!empty($piece->medium)) $mediums[] = $piece->medium;
 }
+$artists = array_values(array_unique($artists));
+$mediums = array_values(array_unique($mediums));
 sort($artists);
 sort($mediums);
 
