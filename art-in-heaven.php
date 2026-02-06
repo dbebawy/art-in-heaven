@@ -395,13 +395,12 @@ class Art_In_Heaven {
         // Elegant theme CSS (loaded in <head> to prevent FOUC)
         wp_enqueue_style('aih-elegant-theme', AIH_PLUGIN_URL . 'assets/css/elegant-theme.css', array('aih-google-fonts'), AIH_VERSION);
 
-        wp_enqueue_style('aih-frontend', AIH_PLUGIN_URL . 'assets/css/aih-frontend.css', array('aih-elegant-theme'), AIH_VERSION);
         wp_enqueue_script('aih-frontend', AIH_PLUGIN_URL . 'assets/js/aih-frontend.js', array('jquery'), AIH_VERSION, true);
-        
+
         // Add custom color CSS
         $custom_css = $this->get_custom_color_css();
         if ($custom_css) {
-            wp_add_inline_style('aih-frontend', $custom_css);
+            wp_add_inline_style('aih-elegant-theme', $custom_css);
         }
         
         $auth = AIH_Auth::get_instance();

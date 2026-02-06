@@ -262,7 +262,7 @@ $cart_count = count($checkout->get_won_items($bidder_id));
                                 <label>Your Bid</label>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" id="bid-amount" data-min="<?php echo $min_bid; ?>" placeholder="$">
                             </div>
-                            <button type="button" id="place-bid" class="aih-btn" data-id="<?php echo $art_piece->id; ?>">
+                            <button type="button" id="place-bid" class="aih-bid-btn" data-id="<?php echo $art_piece->id; ?>">
                                 Bid
                             </button>
                         </div>
@@ -575,16 +575,20 @@ jQuery(document).ready(function($) {
 /* Single Item Page Overrides */
 .aih-single-nav-bar {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--color-border);
 }
 
 .aih-back-link {
-    font-size: 14px;
+    width: 100%;
+    text-align: center;
+    order: 2;
+    font-size: 13px;
     color: var(--color-accent);
     text-decoration: none;
     font-weight: 500;
@@ -598,6 +602,7 @@ jQuery(document).ready(function($) {
     display: flex;
     align-items: center;
     gap: 12px;
+    order: 1;
 }
 
 .aih-nav-arrow {
@@ -634,7 +639,7 @@ jQuery(document).ready(function($) {
 }
 
 .aih-nav-spacer {
-    width: 100px; /* Balance the back link */
+    display: none;
 }
 
 /* Content wrapper with navigation arrows at edges */
@@ -646,10 +651,11 @@ jQuery(document).ready(function($) {
 }
 
 .aih-single-content-wrapper > .aih-nav-arrow {
-    position: absolute;
-    top: 200px;
-    width: 48px;
-    height: 48px;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -658,9 +664,9 @@ jQuery(document).ready(function($) {
     border-radius: 50%;
     color: var(--color-primary);
     text-decoration: none;
-    font-size: 20px;
+    font-size: 16px;
     transition: all var(--transition);
-    z-index: 10;
+    z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -671,11 +677,11 @@ jQuery(document).ready(function($) {
 }
 
 .aih-single-content-wrapper > .aih-nav-prev {
-    left: -24px;
+    left: 4px;
 }
 
 .aih-single-content-wrapper > .aih-nav-next {
-    right: -24px;
+    right: 4px;
 }
 
 .aih-single-content {
@@ -691,7 +697,7 @@ jQuery(document).ready(function($) {
     position: relative;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -710,20 +716,20 @@ jQuery(document).ready(function($) {
 
 .aih-single-image .aih-fav-btn {
     position: absolute;
-    top: 24px;
-    right: 24px;
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
 }
 
 /* Art ID Badge on single image - like gallery cards */
 .aih-art-id-badge-single {
     position: absolute;
-    bottom: 24px;
-    left: 24px;
-    padding: 8px 14px;
-    font-size: 20px;
+    bottom: 16px;
+    left: 16px;
+    padding: 6px 10px;
+    font-size: 16px;
     font-weight: 700;
     font-family: var(--font-display);
     letter-spacing: 0.5px;
@@ -738,13 +744,13 @@ jQuery(document).ready(function($) {
 /* Status Badge on single image - top left corner */
 .aih-badge-single {
     position: absolute;
-    top: 24px;
-    left: 24px;
+    top: 16px;
+    left: 16px;
     z-index: 4;
 }
 
 .aih-thumbnails {
-    display: flex;
+    display: none;
     gap: 12px;
     margin-top: 16px;
     padding-top: 16px;
@@ -786,7 +792,7 @@ jQuery(document).ready(function($) {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 16px;
     flex-wrap: wrap;
 }
@@ -798,7 +804,7 @@ jQuery(document).ready(function($) {
 
 .aih-single-details h1 {
     font-family: var(--font-display);
-    font-size: clamp(24px, 6vw, 36px);
+    font-size: 22px;
     font-weight: 500;
     margin-bottom: 8px;
     line-height: 1.3;
@@ -875,7 +881,7 @@ jQuery(document).ready(function($) {
 
 .aih-bid-section {
     background: var(--color-bg);
-    padding: 16px;
+    padding: 14px;
     border: 1px solid var(--color-border);
     margin-bottom: 20px;
 }
@@ -904,7 +910,7 @@ jQuery(document).ready(function($) {
 }
 
 .aih-current-bid {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     text-align: center;
 }
 
@@ -919,7 +925,7 @@ jQuery(document).ready(function($) {
 
 .aih-current-bid .aih-bid-amount {
     font-family: var(--font-display);
-    font-size: clamp(28px, 7vw, 36px);
+    font-size: 24px;
     font-weight: 600;
 }
 
@@ -943,23 +949,23 @@ jQuery(document).ready(function($) {
 
 .aih-bid-form-single .aih-field label {
     font-size: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .aih-bid-form-single input {
     width: 100%;
-    height: 38px;
+    height: 44px;
     padding: 0 10px;
-    font-size: 14px;
+    font-size: 16px;
     box-sizing: border-box;
 }
 
-.aih-bid-form-single .aih-btn {
+.aih-bid-form-single .aih-bid-btn {
     flex-shrink: 0;
-    width: 50px;
-    height: 38px;
+    width: 60px;
+    height: 44px;
     padding: 0;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1;
     white-space: nowrap;
     display: flex;
@@ -1022,6 +1028,166 @@ jQuery(document).ready(function($) {
     font-size: 12px;
 }
 
+/* === Tablet portrait (600px+) === */
+@media (min-width: 600px) {
+    .aih-single-nav-bar {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .aih-back-link {
+        width: auto;
+        text-align: left;
+        order: 0;
+        font-size: 14px;
+    }
+
+    .aih-nav-center {
+        order: 0;
+    }
+
+    .aih-nav-spacer {
+        display: block;
+        width: 100px;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-arrow {
+        position: absolute;
+        top: 200px;
+        transform: none;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+        z-index: 10;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-prev {
+        left: -24px;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-next {
+        right: -24px;
+    }
+
+    .aih-single-image {
+        padding: 16px;
+    }
+
+    .aih-single-image .aih-fav-btn {
+        top: 24px;
+        right: 24px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .aih-single-meta {
+        gap: 12px;
+    }
+
+    .aih-single-details h1 {
+        font-size: clamp(24px, 6vw, 36px);
+    }
+
+    .aih-art-id-badge-single {
+        bottom: 24px;
+        left: 24px;
+        padding: 8px 14px;
+        font-size: 20px;
+    }
+
+    .aih-badge-single {
+        top: 24px;
+        left: 24px;
+    }
+
+    .aih-img-nav-prev {
+        left: 12px;
+    }
+
+    .aih-img-nav-next {
+        right: 12px;
+    }
+
+    .aih-bid-section {
+        padding: 16px;
+    }
+
+    .aih-current-bid {
+        margin-bottom: 20px;
+    }
+
+    .aih-current-bid .aih-bid-amount {
+        font-size: clamp(28px, 7vw, 36px);
+    }
+
+    .aih-bid-form-single .aih-field label {
+        margin-bottom: 6px;
+    }
+
+    .aih-bid-form-single input {
+        height: 38px;
+        font-size: 14px;
+    }
+
+    .aih-bid-form-single .aih-bid-btn {
+        width: 50px;
+        height: 38px;
+        font-size: 14px;
+    }
+}
+
+/* === Tablet landscape (769px+) === */
+@media (min-width: 769px) {
+    .aih-img-nav {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        font-size: 20px;
+        line-height: 32px;
+    }
+
+    .aih-img-nav-prev {
+        left: 24px;
+        padding-right: 2px;
+    }
+
+    .aih-img-nav-next {
+        right: 24px;
+        padding-left: 2px;
+    }
+
+    .aih-image-dot {
+        width: 10px;
+        height: 10px;
+        min-width: 10px;
+        min-height: 10px;
+    }
+
+    .aih-thumbnails {
+        display: flex;
+    }
+
+    .aih-lightbox-nav {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 24px;
+        line-height: 44px;
+    }
+
+    .aih-lightbox-prev {
+        left: 20px;
+    }
+
+    .aih-lightbox-next {
+        right: 20px;
+    }
+}
+
 @media (min-width: 900px) {
     .aih-single-content-wrapper {
         padding: 0 60px;
@@ -1052,138 +1218,6 @@ jQuery(document).ready(function($) {
         flex-direction: row;
         justify-content: space-between;
         gap: 16px;
-    }
-}
-
-@media (max-width: 600px) {
-    .aih-single-nav-bar {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    .aih-back-link {
-        width: 100%;
-        text-align: center;
-        order: 2;
-        font-size: 13px;
-    }
-
-    .aih-nav-center {
-        order: 1;
-    }
-
-    .aih-nav-spacer {
-        display: none;
-    }
-
-    .aih-single-content-wrapper {
-        padding: 0;
-    }
-
-    .aih-single-content-wrapper > .aih-nav-arrow {
-        position: fixed;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
-        z-index: 100;
-    }
-
-    .aih-single-content-wrapper > .aih-nav-prev {
-        left: 4px;
-    }
-
-    .aih-single-content-wrapper > .aih-nav-next {
-        right: 4px;
-    }
-
-    .aih-single-image {
-        padding: 12px;
-    }
-
-    .aih-single-image .aih-fav-btn {
-        top: 16px;
-        right: 16px;
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
-    }
-
-    .aih-single-meta {
-        flex-direction: row;
-        justify-content: flex-start;
-        gap: 8px;
-    }
-
-    .aih-single-details h1 {
-        font-size: 22px;
-    }
-
-    /* Art ID badge mobile */
-    .aih-art-id-badge-single {
-        bottom: 16px;
-        left: 16px;
-        padding: 6px 10px;
-        font-size: 16px;
-    }
-
-    /* Status badge mobile */
-    .aih-badge-single {
-        top: 16px;
-        left: 16px;
-    }
-
-    /* Nav arrows mobile - consistent with other elements */
-    .aih-img-nav-prev {
-        left: 16px;
-    }
-
-    .aih-img-nav-next {
-        right: 16px;
-    }
-
-    /* Bid section mobile scaling */
-    .aih-bid-section {
-        padding: 14px;
-    }
-
-    .aih-current-bid {
-        margin-bottom: 14px;
-    }
-
-    .aih-current-bid .aih-bid-amount {
-        font-size: 24px;
-    }
-
-    /* Keep bid form horizontal on mobile - properly sized for touch */
-    .aih-bid-form-single {
-        flex-direction: row;
-        gap: 8px;
-    }
-
-    .aih-bid-form-single .aih-field {
-        flex: 1 1 auto;
-    }
-
-    .aih-bid-form-single .aih-field label {
-        font-size: 10px;
-        margin-bottom: 4px;
-    }
-
-    .aih-bid-form-single input {
-        height: 44px;
-        padding: 0 10px;
-        font-size: 16px;
-    }
-
-    .aih-bid-form-single .aih-btn {
-        height: 44px;
-        width: 60px;
-        padding: 0;
-        font-size: 16px;
-        line-height: 1;
     }
 }
 
@@ -1227,10 +1261,10 @@ jQuery(document).ready(function($) {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1238,9 +1272,9 @@ jQuery(document).ready(function($) {
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 16px;
     font-weight: normal;
-    line-height: 32px;
+    line-height: 28px;
     padding: 0;
     text-align: center;
     color: var(--color-primary);
@@ -1252,13 +1286,15 @@ jQuery(document).ready(function($) {
 
 /* Adjust arrow position for better optical centering */
 .aih-img-nav-prev {
-    left: 24px;
-    padding-right: 2px;
+    left: 16px;
+    padding-right: 1px;
+    padding-left: 0;
 }
 
 .aih-img-nav-next {
-    right: 24px;
-    padding-left: 2px;
+    right: 16px;
+    padding-left: 1px;
+    padding-right: 0;
 }
 
 .aih-img-nav:hover {
@@ -1279,10 +1315,10 @@ jQuery(document).ready(function($) {
 }
 
 .aih-image-dot {
-    width: 10px;
-    height: 10px;
-    min-width: 10px;
-    min-height: 10px;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
     aspect-ratio: 1;
     flex-shrink: 0;
     border-radius: 50%;
@@ -1398,17 +1434,17 @@ html.aih-lightbox-open body {
     position: fixed;
     top: 50%;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 24px;
+    font-size: 20px;
     font-weight: normal;
-    line-height: 44px;
+    line-height: 36px;
     text-align: center;
     cursor: pointer;
     align-items: center;
@@ -1426,32 +1462,13 @@ html.aih-lightbox-open body {
 }
 
 .aih-lightbox-prev {
-    left: 20px;
+    left: 10px;
     padding-right: 2px;
 }
 
 .aih-lightbox-next {
-    right: 20px;
+    right: 10px;
     padding-left: 2px;
-}
-
-@media (max-width: 768px) {
-    .aih-lightbox-nav {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
-        font-size: 20px;
-        line-height: 36px;
-    }
-
-    .aih-lightbox-prev {
-        left: 10px;
-    }
-
-    .aih-lightbox-next {
-        right: 10px;
-    }
 }
 
 .aih-lightbox-counter {
@@ -1575,39 +1592,4 @@ html.aih-lightbox-open body {
     }
 }
 
-/* Mobile image nav always visible */
-@media (max-width: 768px) {
-    .aih-img-nav {
-        opacity: 1;
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
-        min-height: 28px;
-        font-size: 16px;
-        line-height: 28px;
-    }
-
-    .aih-img-nav-prev {
-        left: 12px;
-        padding-right: 1px;
-        padding-left: 0;
-    }
-
-    .aih-img-nav-next {
-        right: 12px;
-        padding-left: 1px;
-        padding-right: 0;
-    }
-
-    .aih-image-dot {
-        width: 8px;
-        height: 8px;
-        min-width: 8px;
-        min-height: 8px;
-    }
-
-    .aih-thumbnails {
-        display: none;
-    }
-}
 </style>

@@ -56,13 +56,6 @@ class AIH_Assets {
             AIH_VERSION
         );
 
-        // Register frontend extras CSS (inline styles extracted from templates)
-        wp_register_style(
-            'aih-frontend-extras',
-            AIH_PLUGIN_URL . 'assets/css/aih-frontend-extras.css',
-            array('aih-elegant-theme'),
-            AIH_VERSION
-        );
     }
 
     /**
@@ -85,7 +78,6 @@ class AIH_Assets {
      */
     public static function enqueue_frontend_extras() {
         self::enqueue_elegant_theme();
-        wp_enqueue_style('aih-frontend-extras');
     }
 
     /**
