@@ -2381,14 +2381,23 @@ body {
         font-size: 24px;
     }
     
+    .aih-logo {
+        flex: 1;
+    }
+
     .aih-nav {
         order: 0;
         width: auto;
-        flex: 1;
+        flex: 0 0 auto;
         justify-content: center;
         gap: 36px;
         padding-top: 0;
         border-top: none;
+    }
+
+    .aih-header-actions {
+        flex: 1;
+        justify-content: flex-end;
     }
     
     .aih-nav-link {

@@ -69,10 +69,11 @@ if (typeof aihAjax === 'undefined') {
     </header>
 
     <main class="aih-main">
-        <div class="aih-winners-header">
-            <div class="aih-ornament">✦</div>
-            <h1>Art Piece Winners</h1>
-            <p class="aih-subtitle"><?php echo count($winning_bids); ?> pieces sold</p>
+        <div class="aih-gallery-header">
+            <div class="aih-gallery-title">
+                <h1>Winners</h1>
+                <p class="aih-subtitle"><?php echo count($winning_bids); ?> pieces sold</p>
+            </div>
         </div>
 
         <?php if (empty($winning_bids)): ?>
@@ -152,24 +153,6 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-.aih-winners-header {
-    text-align: center;
-    margin-bottom: 48px;
-    padding-bottom: 32px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.aih-winners-header .aih-ornament {
-    margin-bottom: 24px;
-}
-
-.aih-winners-header h1 {
-    font-family: var(--font-display);
-    font-size: 48px;
-    font-weight: 500;
-    margin-bottom: 8px;
-}
-
 .aih-date-divider {
     display: flex;
     align-items: center;
@@ -262,10 +245,6 @@ jQuery(document).ready(function($) {
 }
 
 @media (max-width: 600px) {
-    .aih-winners-header h1 {
-        font-size: 32px;
-    }
-
     .aih-winner-code {
         font-size: 13px;
     }
