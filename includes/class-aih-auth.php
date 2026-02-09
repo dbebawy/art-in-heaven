@@ -104,7 +104,7 @@ class AIH_Auth {
         
         if (defined('DOING_AJAX') && DOING_AJAX) {
             // Allow sessions for our AJAX actions only
-            if (isset($_REQUEST['action'])) {
+            if (isset($_POST['action'])) {
                 $our_actions = array(
                     'aih_verify_code', 'aih_logout', 'aih_check_auth',
                     'aih_place_bid', 'aih_toggle_favorite', 'aih_get_gallery',
@@ -112,7 +112,7 @@ class AIH_Auth {
                     'aih_create_order', 'aih_get_pushpay_link',
                     'aih_get_order_details', 'aih_get_my_purchases'
                 );
-                return in_array($_REQUEST['action'], $our_actions);
+                return in_array($_POST['action'], $our_actions);
             }
             return false;
         }

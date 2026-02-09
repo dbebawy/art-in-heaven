@@ -236,15 +236,22 @@ class AIH_REST_API {
      * GET /art - Get art pieces
      */
     public function get_art_pieces($request) {
+        $status = $request->get_param('status');
+
+        // Non-admins cannot access draft or all statuses
+        if (in_array($status, array('draft', 'all'), true) && !$this->check_admin_permission()) {
+            $status = 'active';
+        }
+
         $args = array(
-            'status' => $request->get_param('status'),
+            'status' => $status,
             'search' => $request->get_param('search'),
             'orderby' => $request->get_param('orderby'),
             'order' => $request->get_param('order'),
             'limit' => $request->get_param('per_page'),
             'offset' => ($request->get_param('page') - 1) * $request->get_param('per_page'),
         );
-        
+
         if ($args['status'] === 'all') {
             unset($args['status']);
         }

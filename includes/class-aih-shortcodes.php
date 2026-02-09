@@ -70,10 +70,10 @@ class AIH_Shortcodes {
         
         // If already logged in, redirect or show message
         if ($auth->is_logged_in()) {
-            $redirect_to = isset($_GET['redirect_to']) ? esc_url($_GET['redirect_to']) : '';
+            $redirect_to = isset($_GET['redirect_to']) ? wp_validate_redirect($_GET['redirect_to'], home_url()) : '';
             if ($redirect_to) {
-                echo '<script>window.location.href = "' . $redirect_to . '";</script>';
-                return '<p>' . __('Redirecting...', 'art-in-heaven') . '</p>';
+                wp_safe_redirect($redirect_to);
+                exit;
             }
             $bidder = $auth->get_current_bidder();
             $name = !empty($bidder->name_first) ? $bidder->name_first : (!empty($bidder->email_primary) ? $bidder->email_primary : '');

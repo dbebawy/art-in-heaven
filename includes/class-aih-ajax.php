@@ -297,6 +297,13 @@ class AIH_Ajax {
         $checkout = AIH_Checkout::get_instance();
         $order = $checkout->get_order_by_number(sanitize_text_field($_POST['order_number'] ?? ''));
         if (!$order) wp_send_json_error(array('message' => __('Order not found.', 'art-in-heaven')));
+
+        // Verify this order belongs to the current bidder
+        $current_bidder = $auth->get_current_bidder_id();
+        if ($order->bidder_id != $current_bidder) {
+            wp_send_json_error(array('message' => __('Order does not belong to this account.', 'art-in-heaven')));
+        }
+
         wp_send_json_success(array('pushpay_url' => $checkout->get_pushpay_payment_url($order)));
     }
 
@@ -1437,7 +1444,7 @@ class AIH_Ajax {
     public function set_upload_flag() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
         
-        if (!current_user_can('edit_posts')) {
+        if (!AIH_Roles::can_manage_art()) {
             wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
         

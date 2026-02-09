@@ -326,7 +326,7 @@ class AIH_Database {
             }
 
             // Check what tables exist now
-            $all_tables = $wpdb->get_col("SHOW TABLES LIKE '%" . $wpdb->prefix . $year . "%'");
+            $all_tables = $wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s", '%' . $wpdb->esc_like($wpdb->prefix . $year) . '%'));
             error_log('AIH: Tables matching prefix+year: ' . print_r($all_tables, true));
 
             // Also check tables_exist result
@@ -513,9 +513,13 @@ class AIH_Database {
         // Clear transients
         global $wpdb;
         $wpdb->query(
-            "DELETE FROM {$wpdb->options} 
-             WHERE option_name LIKE '_transient_aih_%' 
-             OR option_name LIKE '_transient_timeout_aih_%'"
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options}
+                 WHERE option_name LIKE %s
+                 OR option_name LIKE %s",
+                '_transient_aih_%',
+                '_transient_timeout_aih_%'
+            )
         );
         
         flush_rewrite_rules();
