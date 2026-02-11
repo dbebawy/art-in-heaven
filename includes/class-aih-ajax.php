@@ -1189,10 +1189,10 @@ class AIH_Ajax {
             wp_send_json_error(array('message' => sprintf(__('Missing required columns: %s', 'art-in-heaven'), implode(', ', $missing))));
         }
 
-        // Get default dates from settings
+        // Get auction dates from form inputs, falling back to settings
         $settings = get_option('aih_settings', array());
-        $default_start = isset($settings['event_date']) ? $settings['event_date'] : '';
-        $default_end = isset($settings['event_end_date']) ? $settings['event_end_date'] : '';
+        $auction_start = !empty($_POST['auction_start']) ? sanitize_text_field($_POST['auction_start']) : (isset($settings['event_date']) ? $settings['event_date'] : '');
+        $auction_end = !empty($_POST['auction_end']) ? sanitize_text_field($_POST['auction_end']) : (isset($settings['event_end_date']) ? $settings['event_end_date'] : '');
 
         $art_model = new AIH_Art_Piece();
         $summary = array('created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => 0, 'total' => 0);
@@ -1236,16 +1236,6 @@ class AIH_Ajax {
                 $errors[] = 'starting_bid must be a non-negative number';
             }
 
-            $auction_start = $get('auction_start');
-            if ($auction_start !== '' && !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $auction_start)) {
-                $errors[] = 'auction_start must be YYYY-MM-DD HH:MM:SS';
-            }
-
-            $auction_end = $get('auction_end');
-            if ($auction_end !== '' && !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $auction_end)) {
-                $errors[] = 'auction_end must be YYYY-MM-DD HH:MM:SS';
-            }
-
             if (!empty($errors)) {
                 $summary['errors']++;
                 $row_results[] = array(
@@ -1267,8 +1257,8 @@ class AIH_Ajax {
                 'description'   => $get('description'),
                 'starting_bid'  => $starting_bid !== '' ? floatval($starting_bid) : 0.00,
                 'tier'          => intval($tier),
-                'auction_start' => $auction_start !== '' ? $auction_start : $default_start,
-                'auction_end'   => $auction_end !== '' ? $auction_end : $default_end,
+                'auction_start' => $auction_start,
+                'auction_end'   => $auction_end,
                 'show_end_time' => 0,
                 'status'        => 'draft',
                 'force_status'  => true,

@@ -1710,6 +1710,24 @@ button.aih-action-btn .dashicons {
     height: 24px;
 }
 
+.aih-import-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--aih-space-sm);
+    margin-bottom: var(--aih-space-md);
+}
+
+.aih-import-dates .aih-form-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.aih-import-dates .aih-datetime-input {
+    width: 100%;
+}
+
 .aih-import-options {
     margin-bottom: var(--aih-space-md);
 }

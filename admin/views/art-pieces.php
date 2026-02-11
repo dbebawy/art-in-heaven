@@ -176,6 +176,17 @@ $art_pieces = $art_model->get_all_with_stats($filter_args);
                     <input type="file" id="aih-import-file" accept=".csv" style="display:none;">
                 </div>
 
+                <div class="aih-import-dates">
+                    <div class="aih-form-row">
+                        <label for="aih-import-start"><?php _e('Auction Start', 'art-in-heaven'); ?></label>
+                        <input type="datetime-local" id="aih-import-start" class="aih-datetime-input">
+                    </div>
+                    <div class="aih-form-row">
+                        <label for="aih-import-end"><?php _e('Auction End', 'art-in-heaven'); ?></label>
+                        <input type="datetime-local" id="aih-import-end" class="aih-datetime-input">
+                    </div>
+                </div>
+
                 <div class="aih-import-options">
                     <label>
                         <input type="checkbox" id="aih-import-update-existing">
@@ -896,6 +907,8 @@ jQuery(document).ready(function($) {
         $('#aih-import-file').val('');
         $('#aih-import-file-text').text('<?php echo esc_js(__('Choose CSV file (max 2MB)', 'art-in-heaven')); ?>');
         $('#aih-import-update-existing').prop('checked', false);
+        $('#aih-import-start').val('');
+        $('#aih-import-end').val('');
         $('#aih-import-submit').prop('disabled', true);
         importHadChanges = false;
         $importModal.fadeIn(200);
@@ -933,8 +946,8 @@ jQuery(document).ready(function($) {
     // Download template
     $('#aih-download-template').on('click', function() {
         var bom = '\uFEFF';
-        var headers = 'art_id,title,artist,medium,dimensions,description,starting_bid,tier,auction_start,auction_end';
-        var example = 'ART-001,Sunset Over Mountains,Jane Doe,Oil on Canvas,24 x 36 in,A vibrant sunset landscape,150.00,2,2026-03-01 18:00:00,2026-03-01 21:00:00';
+        var headers = 'art_id,title,artist,medium,dimensions,description,starting_bid,tier';
+        var example = 'ART-001,Sunset Over Mountains,Jane Doe,Oil on Canvas,24 x 36 in,A vibrant sunset landscape,150.00,2';
         var csv = bom + headers + '\n' + example + '\n';
         var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         var url = URL.createObjectURL(blob);
@@ -957,6 +970,10 @@ jQuery(document).ready(function($) {
         formData.append('nonce', aihAdmin.nonce);
         formData.append('csv_file', file);
         formData.append('update_existing', $('#aih-import-update-existing').is(':checked') ? '1' : '0');
+        var startVal = $('#aih-import-start').val();
+        var endVal = $('#aih-import-end').val();
+        if (startVal) formData.append('auction_start', startVal.replace('T', ' ') + ':00');
+        if (endVal) formData.append('auction_end', endVal.replace('T', ' ') + ':00');
 
         // Switch to progress view
         $uploadView.hide();
