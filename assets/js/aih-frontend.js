@@ -128,6 +128,9 @@
                             }
                         });
                     }
+                },
+                error: function() {
+                    // Silently fail - search will just not filter
                 }
             });
         }, 300);
@@ -170,6 +173,9 @@
                 } else if (response.data && response.data.login_required) {
                     showToast(aihAjax.strings.loginRequired, 'error');
                 }
+            },
+            error: function() {
+                showToast('Network error. Please try again.', 'error');
             }
         });
     });
@@ -227,14 +233,14 @@
                     
                     if (data.user_bids && data.user_bids.length > 0) {
                         data.user_bids.forEach(function(bid) {
-                            var winningClass = bid.is_winning ? 'winning' : '';
-                            $bidsList.append(
-                                '<div class="aih-bid-item ' + winningClass + '">' +
-                                    '<span class="aih-amount">$' + bid.amount + '</span>' +
-                                    '<span class="aih-time">' + bid.time + '</span>' +
-                                    (bid.is_winning ? '<span class="aih-winning">✓ Winning</span>' : '') +
-                                '</div>'
-                            );
+                            var $item = $('<div>').addClass('aih-bid-item');
+                            if (bid.is_winning) $item.addClass('winning');
+                            $item.append($('<span>').addClass('aih-amount').text('$' + bid.amount));
+                            $item.append($('<span>').addClass('aih-time').text(bid.time));
+                            if (bid.is_winning) {
+                                $item.append($('<span>').addClass('aih-winning').text('\u2713 Winning'));
+                            }
+                            $bidsList.append($item);
                         });
                         $('#aih-user-bids').show();
                     } else {
@@ -251,6 +257,9 @@
                         }, 300);
                     }
                 }
+            },
+            error: function() {
+                showToast('Failed to load details. Please try again.', 'error');
             }
         });
     }

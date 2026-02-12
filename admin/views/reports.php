@@ -31,6 +31,7 @@ $stats->pieces_with_bids = isset($stats->pieces_with_bids) ? $stats->pieces_with
 $stats->total_starting_value = isset($stats->total_starting_value) ? $stats->total_starting_value : 0;
 $stats->highest_bid = isset($stats->highest_bid) ? $stats->highest_bid : 0;
 $stats->average_bid = isset($stats->average_bid) ? $stats->average_bid : 0;
+$stats->top_pieces = isset($stats->top_pieces) ? $stats->top_pieces : array();
 
 // Ensure payment_stats has all required properties
 if (!$payment_stats) {
@@ -86,7 +87,7 @@ $last_bid_time = $last_bid ? $last_bid->bid_time : null;
         <div class="aih-stat-card aih-last-bid-card">
             <span class="aih-stat-number"><?php 
                 if ($last_bid_time) {
-                    $time_diff = current_time('timestamp') - strtotime($last_bid_time);
+                    $time_diff = time() - strtotime($last_bid_time);
                     if ($time_diff < 60) {
                         echo __('Just now', 'art-in-heaven');
                     } elseif ($time_diff < 3600) {
@@ -124,9 +125,9 @@ $last_bid_time = $last_bid ? $last_bid->bid_time : null;
         <div class="aih-report-section">
             <h2><?php _e('Payment Statistics', 'art-in-heaven'); ?></h2>
             <table class="widefat">
-                <tr><th><?php _e('Total Orders', 'art-in-heaven'); ?></th><td><?php echo $payment_stats->total_orders ?: 0; ?></td></tr>
-                <tr><th><?php _e('Paid Orders', 'art-in-heaven'); ?></th><td><?php echo $payment_stats->paid_orders ?: 0; ?></td></tr>
-                <tr><th><?php _e('Pending Orders', 'art-in-heaven'); ?></th><td><?php echo $payment_stats->pending_orders ?: 0; ?></td></tr>
+                <tr><th><?php _e('Total Orders', 'art-in-heaven'); ?></th><td><?php echo intval($payment_stats->total_orders ?: 0); ?></td></tr>
+                <tr><th><?php _e('Paid Orders', 'art-in-heaven'); ?></th><td><?php echo intval($payment_stats->paid_orders ?: 0); ?></td></tr>
+                <tr><th><?php _e('Pending Orders', 'art-in-heaven'); ?></th><td><?php echo intval($payment_stats->pending_orders ?: 0); ?></td></tr>
                 <tr><th><?php _e('Total Collected', 'art-in-heaven'); ?></th><td>$<?php echo number_format($payment_stats->total_collected ?: 0, 2); ?></td></tr>
                 <tr><th><?php _e('Total Pending', 'art-in-heaven'); ?></th><td>$<?php echo number_format($payment_stats->total_pending ?: 0, 2); ?></td></tr>
             </table>
@@ -147,19 +148,21 @@ $last_bid_time = $last_bid ? $last_bid->bid_time : null;
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($stats->top_pieces as $piece): ?>
+                <?php if (!empty($stats->top_pieces)): foreach ($stats->top_pieces as $piece): ?>
                 <tr>
-                    <td><a href="<?php echo admin_url('admin.php?page=art-in-heaven-add&edit=' . $piece->id); ?>"><?php echo esc_html($piece->title); ?></a></td>
+                    <td><a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-add&edit=' . intval($piece->id))); ?>"><?php echo esc_html($piece->title); ?></a></td>
                     <td><?php echo esc_html($piece->artist); ?></td>
-                    <td><?php echo $piece->bid_count; ?></td>
+                    <td><?php echo intval($piece->bid_count); ?></td>
                     <td>$<?php echo number_format($piece->highest_bid ?: 0, 2); ?></td>
                     <td>$<?php echo number_format($piece->starting_bid, 2); ?></td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endforeach; else: ?>
+                <tr><td colspan="5"><?php _e('No art pieces with bids yet.', 'art-in-heaven'); ?></td></tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
-    
+
     <!-- Export Buttons -->
     <div class="aih-report-section">
         <h2><?php _e('Export Data', 'art-in-heaven'); ?></h2>
@@ -184,7 +187,7 @@ jQuery(document).ready(function($) {
         $.ajax({
             url: ajaxurl,
             type: 'POST',
-            data: { action: 'aih_admin_export_data', nonce: '<?php echo wp_create_nonce('aih_admin_nonce'); ?>', type: type },
+            data: { action: 'aih_admin_export_data', nonce: '<?php echo esc_js(wp_create_nonce('aih_admin_nonce')); ?>', type: type },
             success: function(response) {
                 if (response.success) {
                     var blob = new Blob([JSON.stringify(response.data.data, null, 2)], {type: 'application/json'});

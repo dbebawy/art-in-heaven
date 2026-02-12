@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin Bidders View - Fixed Tab Flow
- * 
+ *
  * Tabs:
  * 1. Not Logged In - Registered but haven't logged in yet
  * 2. Logged In - No Bids - Logged in but haven't placed any bids
@@ -27,13 +27,13 @@ $bids_table = AIH_Database::get_table('bids');
 // Count for each category - check actual bids table for accuracy
 $not_logged_in_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM $registrants_table WHERE has_logged_in = 0");
 $logged_in_no_bids_count = (int) $wpdb->get_var(
-    "SELECT COUNT(*) FROM $registrants_table r 
-     WHERE r.has_logged_in = 1 
+    "SELECT COUNT(*) FROM $registrants_table r
+     WHERE r.has_logged_in = 1
      AND NOT EXISTS (SELECT 1 FROM $bids_table b WHERE b.bidder_id = r.confirmation_code)"
 );
 $logged_in_has_bids_count = (int) $wpdb->get_var(
-    "SELECT COUNT(*) FROM $registrants_table r 
-     WHERE r.has_logged_in = 1 
+    "SELECT COUNT(*) FROM $registrants_table r
+     WHERE r.has_logged_in = 1
      AND EXISTS (SELECT 1 FROM $bids_table b WHERE b.bidder_id = r.confirmation_code)"
 );
 $all_registrants_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM $registrants_table");
@@ -48,8 +48,8 @@ if ($current_tab === 'not_logged_in') {
     $tab_description = __('Registrants who have NOT logged in yet. Consider sending them a reminder email with their confirmation code.', 'art-in-heaven');
 } elseif ($current_tab === 'logged_in_no_bids') {
     $people = $wpdb->get_results(
-        "SELECT r.* FROM $registrants_table r 
-         WHERE r.has_logged_in = 1 
+        "SELECT r.* FROM $registrants_table r
+         WHERE r.has_logged_in = 1
          AND NOT EXISTS (SELECT 1 FROM $bids_table b WHERE b.bidder_id = r.confirmation_code)
          ORDER BY r.name_last, r.name_first ASC"
     );
@@ -57,8 +57,8 @@ if ($current_tab === 'not_logged_in') {
     $tab_description = __('People who logged in but haven\'t placed any bids yet. They may need encouragement!', 'art-in-heaven');
 } elseif ($current_tab === 'logged_in_has_bids') {
     $people = $wpdb->get_results(
-        "SELECT r.* FROM $registrants_table r 
-         WHERE r.has_logged_in = 1 
+        "SELECT r.* FROM $registrants_table r
+         WHERE r.has_logged_in = 1
          AND EXISTS (SELECT 1 FROM $bids_table b WHERE b.bidder_id = r.confirmation_code)
          ORDER BY r.name_last, r.name_first ASC"
     );
@@ -73,7 +73,7 @@ if ($current_tab === 'not_logged_in') {
 ?>
 <div class="wrap aih-admin-wrap">
     <h1><?php _e('Bidders Management', 'art-in-heaven'); ?></h1>
-    
+
     <!-- Sync Status & Actions -->
     <div class="aih-bidders-toolbar">
         <div class="aih-sync-info-bar">
@@ -88,7 +88,7 @@ if ($current_tab === 'not_logged_in') {
         </div>
     </div>
     <div id="aih-sync-result" style="margin-bottom: 15px;"></div>
-    
+
     <!-- Summary Cards -->
     <div class="aih-bidder-stats">
         <div class="aih-stat-card" style="border-left: 4px solid #ef4444;">
@@ -112,29 +112,29 @@ if ($current_tab === 'not_logged_in') {
             <div class="aih-stat-icon"><span class="dashicons dashicons-groups" style="color: #6366f1;" aria-hidden="true"></span></div>
         </div>
     </div>
-    
+
     <!-- Tabs -->
     <nav class="nav-tab-wrapper">
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=not_logged_in'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=not_logged_in'); ?>"
            class="nav-tab <?php echo $current_tab === 'not_logged_in' ? 'nav-tab-active' : ''; ?>">
             <?php _e('Not Logged In', 'art-in-heaven'); ?> (<?php echo $not_logged_in_count; ?>)
         </a>
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=logged_in_no_bids'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=logged_in_no_bids'); ?>"
            class="nav-tab <?php echo $current_tab === 'logged_in_no_bids' ? 'nav-tab-active' : ''; ?>">
             <?php _e('Logged In - No Bids', 'art-in-heaven'); ?> (<?php echo $logged_in_no_bids_count; ?>)
         </a>
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=logged_in_has_bids'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=logged_in_has_bids'); ?>"
            class="nav-tab <?php echo $current_tab === 'logged_in_has_bids' ? 'nav-tab-active' : ''; ?>">
             <?php _e('Logged In - Has Bids', 'art-in-heaven'); ?> (<?php echo $logged_in_has_bids_count; ?>)
         </a>
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=all'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-bidders&tab=all'); ?>"
            class="nav-tab <?php echo $current_tab === 'all' ? 'nav-tab-active' : ''; ?>">
             <?php _e('All Registrants', 'art-in-heaven'); ?> (<?php echo $all_registrants_count; ?>)
         </a>
     </nav>
-    
+
     <div class="aih-tab-content">
-    
+
     <!-- People Table -->
     <div class="aih-table-wrap">
     <table class="wp-list-table widefat fixed striped aih-admin-table">
@@ -170,7 +170,7 @@ if ($current_tab === 'not_logged_in') {
                 </td>
             </tr>
             <?php else: ?>
-                <?php foreach ($people as $person): 
+                <?php foreach ($people as $person):
                     // Get bid count using confirmation_code (NOT email)
                     $bid_count = $wpdb->get_var($wpdb->prepare(
                         "SELECT COUNT(*) FROM $bids_table WHERE bidder_id = %s",
@@ -201,7 +201,7 @@ if ($current_tab === 'not_logged_in') {
                         <?php endif; ?>
                     </td>
                     <td data-label="<?php esc_attr_e('Last Login', 'art-in-heaven'); ?>">
-                        <?php 
+                        <?php
                         // Get last login from bidders table
                         $last_login = $wpdb->get_var($wpdb->prepare(
                             "SELECT last_login FROM $bidders_table WHERE confirmation_code = %s",
@@ -219,13 +219,13 @@ if ($current_tab === 'not_logged_in') {
         </tbody>
     </table>
     </div><!-- /.aih-table-wrap -->
-    
+
     <?php if (!empty($people)): ?>
     <p class="aih-table-footer">
         <?php printf(__('Showing %d people', 'art-in-heaven'), count($people)); ?>
     </p>
     <?php endif; ?>
-    
+
     </div><!-- /.aih-tab-content -->
 </div>
 
@@ -236,11 +236,11 @@ if ($current_tab === 'not_logged_in') {
 <script>
 jQuery(document).ready(function($) {
     $('#aih-sync-now').on('click', function() {
-        if (!confirm('<?php _e('Sync all registrants from the CCB API?', 'art-in-heaven'); ?>')) return;
-        
-        var $btn = $(this).prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> <?php _e('Syncing...', 'art-in-heaven'); ?>');
-        var $result = $('#aih-sync-result').html('<div class="notice notice-info"><p><?php _e('Fetching data from API...', 'art-in-heaven'); ?></p></div>');
-        
+        if (!confirm('<?php echo esc_js(__('Sync all registrants from the CCB API?', 'art-in-heaven')); ?>')) return;
+
+        var $btn = $(this).prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> <?php echo esc_js(__('Syncing...', 'art-in-heaven')); ?>');
+        var $result = $('#aih-sync-result').html('<div class="notice notice-info"><p><?php echo esc_js(__('Fetching data from API...', 'art-in-heaven')); ?></p></div>');
+
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -248,17 +248,23 @@ jQuery(document).ready(function($) {
             data: { action: 'aih_admin_sync_bidders', nonce: '<?php echo wp_create_nonce('aih_admin_nonce'); ?>' },
             success: function(response) {
                 if (response.success) {
-                    $result.html('<div class="notice notice-success"><p>✓ ' + response.data.message + '</p></div>');
+                    var $success = $('<div class="notice notice-success"><p></p></div>');
+                    $success.find('p').text('✓ ' + response.data.message);
+                    $result.html($success);
                     setTimeout(function() { location.reload(); }, 2000);
                 } else {
-                    $result.html('<div class="notice notice-error"><p>✗ ' + (response.data ? response.data.message : 'Sync failed') + '</p></div>');
+                    var $error = $('<div class="notice notice-error"><p></p></div>');
+                    $error.find('p').text('✗ ' + (response.data ? response.data.message : 'Sync failed'));
+                    $result.html($error);
                 }
             },
             error: function() {
-                $result.html('<div class="notice notice-error"><p>✗ <?php _e('Request failed. Please try again.', 'art-in-heaven'); ?></p></div>');
+                var $err = $('<div class="notice notice-error"><p></p></div>');
+                $err.find('p').text('✗ <?php echo esc_js(__('Request failed. Please try again.', 'art-in-heaven')); ?>');
+                $result.html($err);
             },
             complete: function() {
-                $btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> <?php _e('Sync from API', 'art-in-heaven'); ?>');
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> <?php echo esc_js(__('Sync from API', 'art-in-heaven')); ?>');
             }
         });
     });

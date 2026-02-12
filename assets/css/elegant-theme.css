@@ -65,13 +65,23 @@
     }
 }
 
-/* Touch action for better mobile interaction */
-*, *::before, *::after {
+/* Touch action for better mobile interaction - scoped to plugin containers */
+.aih-page *,
+.aih-page *::before,
+.aih-page *::after {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     -webkit-touch-callout: none;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Box-sizing reset - scoped to plugin containers only */
+.aih-page *,
+.aih-page *::before,
+.aih-page *::after,
+.aih-wrap *,
+.aih-wrap *::before,
+.aih-wrap *::after {
+    box-sizing: border-box;
+}
 
 /* Text selection styling */
 ::selection {
@@ -125,11 +135,9 @@
     backface-visibility: hidden;
 }
 
-/* Force background on body/html when our pages load */
-html body {
-    background: var(--color-bg) !important;
-    margin: 0 !important;
-    padding: 0 !important;
+/* Background for plugin pages only - scoped to avoid overriding theme */
+.aih-page {
+    background: var(--color-bg);
 }
 
 /* Reset only containers that wrap our auction content - scoped to not affect theme header */

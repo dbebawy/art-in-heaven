@@ -69,10 +69,10 @@ if (!empty($where_values)) {
 $total_pages = ceil($total_items / $per_page);
 
 // Get transactions
-$query = "SELECT t.*, o.order_number, o.bidder_id 
-          FROM {$transactions_table} t 
-          LEFT JOIN {$orders_table} o ON t.order_id = o.id 
-          WHERE {$where} 
+$query = "SELECT t.*, o.order_number, o.bidder_id
+          FROM {$transactions_table} t
+          LEFT JOIN {$orders_table} o ON t.order_id = o.id
+          WHERE {$where}
           ORDER BY {$order_sql} {$order}
           LIMIT %d OFFSET %d";
 $query_values = array_merge($where_values, array($per_page, $offset));
@@ -103,14 +103,14 @@ $matchable_orders = $wpdb->get_results(
 
 <div class="wrap aih-admin-wrap">
     <h1 class="wp-heading-inline"><?php _e('PushPay Transactions', 'art-in-heaven'); ?></h1>
-    
+
     <?php if (!$is_configured): ?>
     <div class="notice notice-warning">
         <p><?php _e('PushPay API is not configured. Please configure it in the Integrations page.', 'art-in-heaven'); ?>
         <a href="<?php echo admin_url('admin.php?page=art-in-heaven-integrations'); ?>" class="button button-small"><?php _e('Configure', 'art-in-heaven'); ?></a></p>
     </div>
     <?php else: ?>
-    
+
     <!-- Sync Status & Actions -->
     <div class="aih-transactions-header">
         <div class="aih-sync-status">
@@ -119,7 +119,7 @@ $matchable_orders = $wpdb->get_results(
             </span>
             <?php if ($last_sync): ?>
             <span class="aih-last-sync">
-                <?php printf(__('Last sync: %s (%d transactions)', 'art-in-heaven'), 
+                <?php printf(__('Last sync: %s (%d transactions)', 'art-in-heaven'),
                     date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_sync)),
                     $last_sync_count
                 ); ?>
@@ -137,7 +137,7 @@ $matchable_orders = $wpdb->get_results(
             </button>
         </div>
     </div>
-    
+
     <!-- Stats Cards -->
     <div class="aih-stats-cards">
         <div class="aih-stat-card">
@@ -153,42 +153,42 @@ $matchable_orders = $wpdb->get_results(
             <div class="aih-stat-label"><?php _e('Unmatched', 'art-in-heaven'); ?></div>
         </div>
         <div class="aih-stat-card">
-            <div class="aih-stat-number">$<?php 
+            <div class="aih-stat-number">$<?php
                 $total_amount = $wpdb->get_var("SELECT SUM(amount) FROM {$transactions_table} WHERE status = 'Success'");
                 echo number_format($total_amount ?: 0, 2);
             ?></div>
             <div class="aih-stat-label"><?php _e('Total Amount', 'art-in-heaven'); ?></div>
         </div>
     </div>
-    
+
     <!-- Filters -->
     <div class="aih-filters-bar">
         <form method="get" action="">
             <input type="hidden" name="page" value="art-in-heaven-transactions">
-            
+
             <select name="status">
                 <option value=""><?php _e('All Statuses', 'art-in-heaven'); ?></option>
                 <option value="Success" <?php selected($filter_status, 'Success'); ?>><?php _e('Success', 'art-in-heaven'); ?> (<?php echo isset($status_counts['Success']) ? $status_counts['Success']->count : 0; ?>)</option>
                 <option value="Processing" <?php selected($filter_status, 'Processing'); ?>><?php _e('Processing', 'art-in-heaven'); ?> (<?php echo isset($status_counts['Processing']) ? $status_counts['Processing']->count : 0; ?>)</option>
                 <option value="Failed" <?php selected($filter_status, 'Failed'); ?>><?php _e('Failed', 'art-in-heaven'); ?> (<?php echo isset($status_counts['Failed']) ? $status_counts['Failed']->count : 0; ?>)</option>
             </select>
-            
+
             <select name="matched">
                 <option value=""><?php _e('All Transactions', 'art-in-heaven'); ?></option>
                 <option value="yes" <?php selected($filter_matched, 'yes'); ?>><?php _e('Matched', 'art-in-heaven'); ?> (<?php echo $matched_count; ?>)</option>
                 <option value="no" <?php selected($filter_matched, 'no'); ?>><?php _e('Unmatched', 'art-in-heaven'); ?> (<?php echo $unmatched_count; ?>)</option>
             </select>
-            
+
             <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search transactions...', 'art-in-heaven'); ?>">
-            
+
             <button type="submit" class="button"><?php _e('Filter', 'art-in-heaven'); ?></button>
-            
+
             <?php if ($filter_status || $filter_matched || $search): ?>
             <a href="<?php echo admin_url('admin.php?page=art-in-heaven-transactions'); ?>" class="button"><?php _e('Clear', 'art-in-heaven'); ?></a>
             <?php endif; ?>
         </form>
     </div>
-    
+
     <!-- Transactions Table -->
     <div class="aih-table-wrap">
         <table class="wp-list-table widefat fixed striped aih-transactions-table">
@@ -237,8 +237,8 @@ $matchable_orders = $wpdb->get_results(
                 </tr>
                 <?php else: ?>
                 <?php foreach ($transactions as $txn): ?>
-                <tr data-id="<?php echo $txn->id; ?>">
-                    <td><?php echo $txn->id; ?></td>
+                <tr data-id="<?php echo intval($txn->id); ?>">
+                    <td><?php echo intval($txn->id); ?></td>
                     <td>
                         <?php if ($txn->payment_date): ?>
                             <?php echo date_i18n('M j, Y', strtotime($txn->payment_date)); ?><br>
@@ -287,11 +287,11 @@ $matchable_orders = $wpdb->get_results(
                     </td>
                     <td>
                         <div class="aih-row-actions">
-                            <button type="button" class="button button-small aih-view-details" data-id="<?php echo $txn->id; ?>" title="<?php esc_attr_e('View Details', 'art-in-heaven'); ?>">
+                            <button type="button" class="button button-small aih-view-details" data-id="<?php echo intval($txn->id); ?>" title="<?php esc_attr_e('View Details', 'art-in-heaven'); ?>">
                                 <span class="dashicons dashicons-visibility"></span>
                             </button>
                             <?php if (!$txn->order_id): ?>
-                            <button type="button" class="button button-small aih-match-order" data-id="<?php echo $txn->id; ?>" data-amount="<?php echo $txn->amount; ?>" title="<?php esc_attr_e('Match to Order', 'art-in-heaven'); ?>">
+                            <button type="button" class="button button-small aih-match-order" data-id="<?php echo intval($txn->id); ?>" data-amount="<?php echo esc_attr($txn->amount); ?>" title="<?php esc_attr_e('Match to Order', 'art-in-heaven'); ?>">
                                 <span class="dashicons dashicons-admin-links"></span>
                             </button>
                             <?php endif; ?>
@@ -303,7 +303,7 @@ $matchable_orders = $wpdb->get_results(
             </tbody>
         </table>
     </div>
-    
+
     <!-- Pagination -->
     <?php if ($total_pages > 1): ?>
     <div class="tablenav bottom">
@@ -319,13 +319,13 @@ $matchable_orders = $wpdb->get_results(
                     'total' => $total_pages,
                     'current' => $current_page
                 ));
-                echo $page_links;
+                echo wp_kses_post($page_links);
                 ?>
             </span>
         </div>
     </div>
     <?php endif; ?>
-    
+
     <?php endif; // is_configured ?>
 </div>
 
@@ -355,9 +355,9 @@ $matchable_orders = $wpdb->get_results(
             <p class="aih-match-amount"></p>
             <select id="aih-match-order-select" style="width: 100%; max-width: 400px;">
                 <option value=""><?php _e('Select an order...', 'art-in-heaven'); ?></option>
-                <?php foreach ($matchable_orders as $order): ?>
-                <option value="<?php echo $order->id; ?>" data-amount="<?php echo $order->total; ?>">
-                    <?php echo esc_html($order->order_number); ?> - $<?php echo number_format($order->total, 2); ?> - <?php echo esc_html(ucfirst($order->payment_status)); ?> (<?php echo date_i18n('M j', strtotime($order->created_at)); ?>)
+                <?php foreach ($matchable_orders as $mo): ?>
+                <option value="<?php echo intval($mo->id); ?>" data-amount="<?php echo esc_attr($mo->total); ?>">
+                    <?php echo esc_html($mo->order_number); ?> - $<?php echo number_format($mo->total, 2); ?> - <?php echo esc_html(ucfirst($mo->payment_status)); ?> (<?php echo date_i18n('M j', strtotime($mo->created_at)); ?>)
                 </option>
                 <?php endforeach; ?>
             </select>
@@ -436,7 +436,7 @@ $matchable_orders = $wpdb->get_results(
 
 <script>
 jQuery(document).ready(function($) {
-    
+
     // Sync transactions
     $('#aih-sync-transactions').on('click', function() {
         var $btn = $(this);
@@ -461,12 +461,12 @@ jQuery(document).ready(function($) {
             alert('Request failed');
         });
     });
-    
+
     // Test connection
     $('#aih-test-connection').on('click', function() {
         var $btn = $(this);
         $btn.prop('disabled', true);
-        
+
         $.post(ajaxurl, {
             action: 'aih_test_pushpay_connection',
             nonce: aihAdmin.nonce
@@ -482,74 +482,75 @@ jQuery(document).ready(function($) {
             alert('Request failed');
         });
     });
-    
+
     // View details
     $('.aih-view-details').on('click', function() {
         var id = $(this).data('id');
         var $modal = $('#aih-transaction-modal');
         var $body = $('#aih-transaction-details');
-        
-        $body.html('<div class="aih-loading"><?php _e('Loading...', 'art-in-heaven'); ?></div>');
+
+        $body.html('<div class="aih-loading"><?php echo esc_js(__('Loading...', 'art-in-heaven')); ?></div>');
         $modal.show();
-        
+
         $.post(ajaxurl, {
             action: 'aih_get_transaction_details',
             nonce: aihAdmin.nonce,
             id: id
         }, function(response) {
             if (response.success) {
+                // Note: server-side handler must properly escape all HTML in response.data.html
                 $body.html(response.data.html);
             } else {
                 $body.html('<p class="error">' + (response.data ? response.data.message : 'Error loading details') + '</p>');
             }
         });
     });
-    
+
     // Match order - open modal
     $('.aih-match-order').on('click', function() {
         var id = $(this).data('id');
         var amount = $(this).data('amount');
-        
+
         $('#aih-match-txn-id').val(id);
-        $('.aih-match-amount').html('<strong><?php _e('Transaction Amount:', 'art-in-heaven'); ?></strong> $' + parseFloat(amount).toFixed(2));
+        $('.aih-match-amount').html('<strong><?php echo esc_js(__('Transaction Amount:', 'art-in-heaven')); ?></strong> $' + parseFloat(amount).toFixed(2));
         $('#aih-match-order-select').val('');
         $('.aih-match-warning').hide();
         $('#aih-match-modal').show();
     });
-    
+
     // Check amount match
     $('#aih-match-order-select').on('change', function() {
         var $selected = $(this).find(':selected');
         var orderAmount = parseFloat($selected.data('amount')) || 0;
         var txnAmount = parseFloat($('.aih-match-amount').text().replace(/[^0-9.]/g, '')) || 0;
-        
+
         if (orderAmount > 0 && Math.abs(orderAmount - txnAmount) > 0.01) {
             $('.aih-match-warning').show();
         } else {
             $('.aih-match-warning').hide();
         }
     });
-    
+
     // Confirm match
     $('#aih-confirm-match').on('click', function() {
         var txnId = $('#aih-match-txn-id').val();
         var orderId = $('#aih-match-order-select').val();
-        
+
         if (!orderId) {
-            alert('<?php _e('Please select an order', 'art-in-heaven'); ?>');
+            alert('<?php echo esc_js(__('Please select an order', 'art-in-heaven')); ?>');
             return;
         }
-        
+
         var $btn = $(this);
-        $btn.prop('disabled', true).text('<?php _e('Matching...', 'art-in-heaven'); ?>');
-        
+        $btn.prop('disabled', true).text('<?php echo esc_js(__('Matching...', 'art-in-heaven')); ?>');
+
         $.post(ajaxurl, {
             action: 'aih_match_transaction_to_order',
             nonce: aihAdmin.nonce,
             transaction_id: txnId,
             order_id: orderId
         }, function(response) {
-            $btn.prop('disabled', false).text('<?php _e('Match', 'art-in-heaven'); ?>');
+            $btn.prop('disabled', false).text('<?php echo esc_js(__('Match', 'art-in-heaven')); ?>');
             if (response.success) {
                 alert(response.data.message);
                 location.reload();
@@ -558,12 +559,12 @@ jQuery(document).ready(function($) {
             }
         });
     });
-    
+
     // Close modals
     $('.aih-modal-close').on('click', function() {
         $(this).closest('.aih-modal').hide();
     });
-    
+
     $(document).on('click', '.aih-modal', function(e) {
         if ($(e.target).hasClass('aih-modal')) {
             $(this).hide();

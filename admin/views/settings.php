@@ -326,12 +326,12 @@ $event_date = get_option('aih_event_date', '');
 
 <script>
 jQuery(document).ready(function($) {
-    var nonce = '<?php echo wp_create_nonce('aih_admin_nonce'); ?>';
-    
+    var nonce = '<?php echo esc_js(wp_create_nonce('aih_admin_nonce')); ?>';
+
     // Update button text when year changes
     $('#aih_auction_year').on('change input', function() {
         var year = $(this).val();
-        $('#aih-create-tables').text('<?php _e('Create Tables for', 'art-in-heaven'); ?> ' + year);
+        $('#aih-create-tables').text('<?php echo esc_js(__('Create Tables for', 'art-in-heaven')); ?> ' + year);
     });
     
     // Create tables
@@ -357,7 +357,7 @@ jQuery(document).ready(function($) {
     
     // Cleanup tables
     $('#aih-cleanup-tables').on('click', function() {
-        if (!confirm('<?php _e('This will migrate data from old columns to new columns and remove old columns. Continue?', 'art-in-heaven'); ?>')) return;
+        if (!confirm('<?php echo esc_js(__('This will migrate data from old columns to new columns and remove old columns. Continue?', 'art-in-heaven')); ?>')) return;
         
         var $btn = $(this).prop('disabled', true);
         var $result = $('#aih-tables-result').html('<span style="color:#666;">Cleaning up...</span>');
@@ -380,8 +380,8 @@ jQuery(document).ready(function($) {
     
     // Delete all data
     $('#aih-purge-data').on('click', function() {
-        if (!confirm('<?php _e('WARNING: This will permanently delete ALL data from every database table (art pieces, bids, orders, bidders, registrants, transactions, etc.). This cannot be undone. Are you sure?', 'art-in-heaven'); ?>')) return;
-        if (!confirm('<?php _e('Are you REALLY sure? All auction data will be lost forever.', 'art-in-heaven'); ?>')) return;
+        if (!confirm('<?php echo esc_js(__('WARNING: This will permanently delete ALL data from every database table (art pieces, bids, orders, bidders, registrants, transactions, etc.). This cannot be undone. Are you sure?', 'art-in-heaven')); ?>')) return;
+        if (!confirm('<?php echo esc_js(__('Are you REALLY sure? All auction data will be lost forever.', 'art-in-heaven')); ?>')) return;
 
         var $btn = $(this).prop('disabled', true);
         var $result = $('#aih-tables-result').html('<span style="color:#666;">Deleting all data...</span>');
@@ -404,7 +404,7 @@ jQuery(document).ready(function($) {
 
     // Apply event date
     $('#aih-apply-event-date').on('click', function() {
-        if (!confirm('<?php _e('This will update the start time for ALL active art pieces. Continue?', 'art-in-heaven'); ?>')) return;
+        if (!confirm('<?php echo esc_js(__('This will update the start time for ALL active art pieces. Continue?', 'art-in-heaven')); ?>')) return;
         
         var $btn = $(this).prop('disabled', true);
         var $result = $('#aih-event-date-result').html('<span style="color:#666;">Updating...</span>');

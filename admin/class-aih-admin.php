@@ -236,9 +236,9 @@ class AIH_Admin {
         }
 
         // General settings
-        register_setting('aih_settings', 'aih_currency_symbol');
-        register_setting('aih_settings', 'aih_bid_increment');
-        register_setting('aih_settings', 'aih_watermark_text');
+        register_setting('aih_settings', 'aih_currency_symbol', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_settings', 'aih_bid_increment', array('sanitize_callback' => 'floatval'));
+        register_setting('aih_settings', 'aih_watermark_text', array('sanitize_callback' => 'sanitize_text_field'));
         register_setting('aih_settings', 'aih_watermark_text_enabled', array(
             'type' => 'boolean',
             'default' => true,
@@ -253,12 +253,12 @@ class AIH_Admin {
                 return $value ? 1 : 0;
             }
         ));
-        register_setting('aih_settings', 'aih_tax_rate');
-        register_setting('aih_settings', 'aih_auction_year');
-        register_setting('aih_settings', 'aih_event_date');
-        register_setting('aih_settings', 'aih_event_end_date');
-        register_setting('aih_settings', 'aih_login_page');
-        register_setting('aih_settings', 'aih_gallery_page');
+        register_setting('aih_settings', 'aih_tax_rate', array('sanitize_callback' => 'floatval'));
+        register_setting('aih_settings', 'aih_auction_year', array('sanitize_callback' => 'intval'));
+        register_setting('aih_settings', 'aih_event_date', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_settings', 'aih_event_end_date', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_settings', 'aih_login_page', array('sanitize_callback' => 'esc_url_raw'));
+        register_setting('aih_settings', 'aih_gallery_page', array('sanitize_callback' => 'esc_url_raw'));
         register_setting('aih_settings', 'aih_show_sold_items', array(
             'type' => 'boolean',
             'default' => true,
@@ -312,10 +312,10 @@ class AIH_Admin {
         ));
         
         // API settings - now in aih_integrations group
-        register_setting('aih_integrations', 'aih_api_base_url');
-        register_setting('aih_integrations', 'aih_api_form_id');
-        register_setting('aih_integrations', 'aih_api_username');
-        register_setting('aih_integrations', 'aih_api_password');
+        register_setting('aih_integrations', 'aih_api_base_url', array('sanitize_callback' => 'esc_url_raw'));
+        register_setting('aih_integrations', 'aih_api_form_id', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_api_username', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_api_password', array('sanitize_callback' => 'sanitize_text_field'));
         register_setting('aih_integrations', 'aih_auto_sync_enabled', array(
             'type' => 'boolean',
             'default' => false,
@@ -343,20 +343,20 @@ class AIH_Admin {
         ));
         
         // Pushpay settings - Production (in aih_integrations group)
-        register_setting('aih_integrations', 'aih_pushpay_merchant_key');
-        register_setting('aih_integrations', 'aih_pushpay_merchant_handle');
-        register_setting('aih_integrations', 'aih_pushpay_fund');
-        register_setting('aih_integrations', 'aih_pushpay_return_url');
-        register_setting('aih_integrations', 'aih_pushpay_client_id');
-        register_setting('aih_integrations', 'aih_pushpay_client_secret');
-        register_setting('aih_integrations', 'aih_pushpay_organization_key');
+        register_setting('aih_integrations', 'aih_pushpay_merchant_key', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_merchant_handle', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_fund', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_return_url', array('sanitize_callback' => 'esc_url_raw'));
+        register_setting('aih_integrations', 'aih_pushpay_client_id', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_client_secret', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_organization_key', array('sanitize_callback' => 'sanitize_text_field'));
 
         // Pushpay settings - Sandbox (in aih_integrations group)
-        register_setting('aih_integrations', 'aih_pushpay_sandbox_client_id');
-        register_setting('aih_integrations', 'aih_pushpay_sandbox_client_secret');
-        register_setting('aih_integrations', 'aih_pushpay_sandbox_organization_key');
-        register_setting('aih_integrations', 'aih_pushpay_sandbox_merchant_key');
-        register_setting('aih_integrations', 'aih_pushpay_sandbox_merchant_handle');
+        register_setting('aih_integrations', 'aih_pushpay_sandbox_client_id', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_sandbox_client_secret', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_sandbox_organization_key', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_sandbox_merchant_key', array('sanitize_callback' => 'sanitize_text_field'));
+        register_setting('aih_integrations', 'aih_pushpay_sandbox_merchant_handle', array('sanitize_callback' => 'sanitize_text_field'));
         
         // Pushpay environment toggle (in aih_integrations group)
         register_setting('aih_integrations', 'aih_pushpay_sandbox', array(

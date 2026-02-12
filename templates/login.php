@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) exit;
 
 global $wpdb;
 
-$redirect_to = isset($_GET['redirect_to']) ? esc_url($_GET['redirect_to']) : '';
+$redirect_to = isset($_GET['redirect_to']) ? wp_validate_redirect(esc_url($_GET['redirect_to']), home_url()) : '';
 
 // Gallery URL - try settings first, then search for shortcode
 $gallery_page = get_option('aih_gallery_page', '');
@@ -18,7 +18,7 @@ $gallery_url = $gallery_page ? get_permalink($gallery_page) : home_url();
 <script>
 if (typeof aihAjax === 'undefined') {
     var aihAjax = {
-        ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+        ajaxurl: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
         nonce: '<?php echo wp_create_nonce('aih_nonce'); ?>',
         isLoggedIn: false
     };
@@ -42,11 +42,11 @@ if (typeof aihAjax === 'undefined') {
     <main class="aih-main aih-main-centered">
         <div class="aih-login-card">
             <div class="aih-login-header">
-                <div class="aih-ornament">✦</div>
+                <div class="aih-ornament">&#10022;</div>
                 <h1>Welcome</h1>
                 <p>Enter your confirmation code to access the auction</p>
             </div>
-            
+
             <div class="aih-login-form">
                 <div class="aih-field">
                     <label for="aih-login-code">Confirmation Code</label>
@@ -56,15 +56,15 @@ if (typeof aihAjax === 'undefined') {
                 <button type="button" id="aih-login-submit" class="aih-btn">Sign In</button>
                 <div id="aih-login-message" class="aih-message"></div>
             </div>
-            
+
             <div class="aih-login-footer" style="text-align: center; padding: 20px 40px; background: var(--color-bg-alt, #f5f3f0); border-top: 1px solid var(--color-border, #e8e6e3);">
-                <p style="font-size: 13px; color: var(--color-muted, #8a8a8a);">Don't have a code? <a href="#" style="color: var(--color-accent, #b8956b); text-decoration: none; font-weight: 500;">Register for the event</a></p>
+                <p class="aih-register-text" style="font-size: 13px; color: var(--color-muted, #8a8a8a);">Don't have a confirmation code? Contact your event organizer to register.</p>
             </div>
         </div>
     </main>
 
     <footer class="aih-footer">
-        <p>&copy; <?php echo date('Y'); ?> Art in Heaven. All rights reserved.</p>
+        <p>&copy; <?php echo esc_html(wp_date('Y')); ?> Art in Heaven. All rights reserved.</p>
     </footer>
 </div>
 
@@ -74,15 +74,15 @@ jQuery(document).ready(function($) {
         var code = $('#aih-login-code').val().trim().toUpperCase();
         var redirect = $('#aih-redirect-to').val();
         var $msg = $('#aih-login-message');
-        
+
         if (!code) {
             $msg.removeClass('success').addClass('error').text('Please enter your confirmation code').show();
             return;
         }
-        
+
         var $btn = $(this).prop('disabled', true).addClass('loading');
         $msg.hide();
-        
+
         $.ajax({
             url: aihAjax.ajaxurl,
             type: 'POST',
@@ -104,7 +104,7 @@ jQuery(document).ready(function($) {
             }
         });
     });
-    
+
     $('#aih-login-code').on('keypress', function(e) {
         if (e.which === 13) $('#aih-login-submit').click();
     }).on('input', function() {
@@ -112,4 +112,3 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-

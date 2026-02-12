@@ -14,7 +14,7 @@ $bidder_name = $bidder_info['name'];
 <script>
 if (typeof aihAjax === 'undefined') {
     var aihAjax = {
-        ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+        ajaxurl: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
         nonce: '<?php echo wp_create_nonce('aih_nonce'); ?>',
         isLoggedIn: <?php echo $is_logged_in ? 'true' : 'false'; ?>
     };
@@ -26,13 +26,13 @@ if (typeof aihAjax === 'undefined') {
 <script>(function(){var t=localStorage.getItem('aih-theme');if(t==='dark'||(t===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.currentScript.parentElement.classList.add('dark-mode');}else if(t!==null&&t!=='light'){localStorage.removeItem('aih-theme');}})();</script>
     <header class="aih-header">
         <div class="aih-header-inner">
-            <a href="<?php echo home_url(); ?>" class="aih-logo">Art in Heaven</a>
+            <a href="<?php echo esc_url(home_url()); ?>" class="aih-logo">Art in Heaven</a>
         </div>
     </header>
     <main class="aih-main">
         <div class="aih-login-card">
             <div class="aih-login-header">
-                <div class="aih-ornament">✦</div>
+                <div class="aih-ornament">&#10022;</div>
                 <h1>Welcome</h1>
                 <p>Enter your confirmation code to access the auction</p>
             </div>
@@ -51,11 +51,16 @@ if (typeof aihAjax === 'undefined') {
 jQuery(document).ready(function($) {
     $('#aih-gate-verify').on('click', function() {
         var code = $('#aih-gate-code').val().trim().toUpperCase();
-        if (!code) { $('#aih-gate-message').addClass('error').text('Please enter your code').show(); return; }
-        $(this).prop('disabled', true).addClass('loading');
+        var $btn = $(this);
+        var $msg = $('#aih-gate-message');
+        if (!code) { $msg.addClass('error').text('Please enter your code').show(); return; }
+        $btn.prop('disabled', true).addClass('loading');
         $.post(aihAjax.ajaxurl, {action:'aih_verify_code', nonce:aihAjax.nonce, code:code}, function(r) {
-            if (r.success) { location.reload(); } 
-            else { $('#aih-gate-message').addClass('error').text(r.data.message || 'Invalid code').show(); $('#aih-gate-verify').prop('disabled', false).removeClass('loading'); }
+            if (r.success) { location.reload(); }
+            else { $msg.addClass('error').text(r.data.message || 'Invalid code').show(); $btn.prop('disabled', false).removeClass('loading'); }
+        }).fail(function() {
+            $btn.prop('disabled', false).removeClass('loading');
+            $msg.text('Network error. Please try again.').addClass('error').show();
         });
     });
     $('#aih-gate-code').on('keypress', function(e) { if (e.which === 13) $('#aih-gate-verify').click(); })
@@ -102,6 +107,7 @@ if ($is_logged_in) {
 $bid_increment = floatval(get_option('aih_bid_increment', 1));
 ?>
 
+<div id="aih-gallery-wrapper" data-server-time="<?php echo esc_attr(time() * 1000); ?>">
 <div class="aih-page aih-gallery-page">
 <script>(function(){var t=localStorage.getItem('aih-theme');if(t==='dark'||(t===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.currentScript.parentElement.classList.add('dark-mode');}else if(t!==null&&t!=='light'){localStorage.removeItem('aih-theme');}})();</script>
     <header class="aih-header">
@@ -117,7 +123,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 <button type="button" class="aih-theme-toggle" id="aih-theme-toggle" title="Toggle dark mode"><svg class="aih-theme-icon aih-icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="aih-theme-icon aih-icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span class="aih-theme-toggle-label">Theme</span></button>
                 <?php if ($checkout_url && $cart_count > 0): ?>
                 <a href="<?php echo esc_url($checkout_url); ?>" class="aih-cart-link">
-                    <span class="aih-cart-icon">🛒</span>
+                    <span class="aih-cart-icon">&#128722;</span>
                     <span class="aih-cart-count"><?php echo $cart_count; ?></span>
                 </a>
                 <?php endif; ?>
@@ -210,7 +216,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
 
         <?php if (empty($art_pieces)): ?>
         <div class="aih-empty-state">
-            <div class="aih-ornament">✦</div>
+            <div class="aih-ornament">&#10022;</div>
             <h2>Coming Soon</h2>
             <p>Art pieces will be available here when the auction begins.</p>
         </div>
@@ -238,8 +244,8 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                     $is_ended = false;
                 } else {
                     // Fallback: calculate from status and dates
-                    $is_ended = $piece->status === 'ended' || (!empty($piece->auction_end) && strtotime($piece->auction_end) && strtotime($piece->auction_end) <= current_time('timestamp'));
-                    $is_upcoming = !$is_ended && !empty($piece->auction_start) && strtotime($piece->auction_start) && strtotime($piece->auction_start) > current_time('timestamp');
+                    $is_ended = $piece->status === 'ended' || (!empty($piece->auction_end) && strtotime($piece->auction_end) && strtotime($piece->auction_end) <= time());
+                    $is_upcoming = !$is_ended && !empty($piece->auction_start) && strtotime($piece->auction_start) && strtotime($piece->auction_start) > time();
                 }
 
                 $status_class = '';
@@ -280,11 +286,11 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                     <span class="aih-art-id-badge"><?php echo esc_html($piece->art_id); ?></span>
 
                     <?php if ($status_text): ?>
-                    <div class="aih-badge aih-badge-<?php echo $status_class; ?>"><?php echo $status_text; ?></div>
+                    <div class="aih-badge aih-badge-<?php echo $status_class; ?>"><?php echo esc_html($status_text); ?></div>
                     <?php endif; ?>
 
                     <button type="button" class="aih-fav-btn <?php echo $is_favorite ? 'active' : ''; ?>" data-id="<?php echo intval($piece->id); ?>">
-                        <span class="aih-fav-icon">♥</span>
+                        <span class="aih-fav-icon">&#9829;</span>
                     </button>
 
                     <?php if (!$is_ended && $piece->auction_end && !empty($piece->show_end_time)): ?>
@@ -293,7 +299,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                     </div>
                     <?php endif; ?>
                 </div>
-                
+
                 <div class="aih-card-body">
                     <h3 class="aih-card-title">
                         <a href="?art_id=<?php echo intval($piece->id); ?>"><?php echo esc_html($piece->title); ?></a>
@@ -310,7 +316,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 <?php if ($is_upcoming): ?>
                 <div class="aih-card-footer">
                     <div class="aih-upcoming-notice" style="padding: 8px; text-align: center; color: #888; font-size: 0.85em;">
-                        Bidding starts <?php echo esc_html(date('M j, g:i A', strtotime($piece->auction_start))); ?>
+                        Bidding starts <?php echo esc_html(wp_date('M j, g:i A', strtotime($piece->auction_start))); ?>
                     </div>
                 </div>
                 <?php elseif (!$is_ended): ?>
@@ -321,7 +327,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                     </div>
                 </div>
                 <?php endif; ?>
-                
+
                 <div class="aih-bid-message"></div>
             </article>
             <?php endforeach; ?>
@@ -330,15 +336,16 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
     </main>
 
     <footer class="aih-footer">
-        <p>&copy; <?php echo date('Y'); ?> Art in Heaven. All rights reserved.</p>
+        <p>&copy; <?php echo esc_html(wp_date('Y')); ?> Art in Heaven. All rights reserved.</p>
     </footer>
+</div>
 </div>
 
 <!-- Toast -->
 <div id="aih-toast" class="aih-toast"></div>
 
 <!-- Scroll to Top Button -->
-<button type="button" class="aih-scroll-top" id="aih-scroll-top" title="Scroll to top">↑</button>
+<button type="button" class="aih-scroll-top" id="aih-scroll-top" title="Scroll to top">&uarr;</button>
 
 <script>
 jQuery(document).ready(function($) {
@@ -348,7 +355,7 @@ jQuery(document).ready(function($) {
             location.reload();
         });
     });
-    
+
     // Search & Filter
     function filterCards() {
         var search = $('#aih-search').val().toLowerCase().trim();
@@ -509,7 +516,7 @@ jQuery(document).ready(function($) {
 
     // Run filter on page load
     filterCards();
-    
+
     // Favorite toggle - only update UI after server confirmation
     $('.aih-fav-btn').on('click', function(e) {
         e.preventDefault();
@@ -533,7 +540,7 @@ jQuery(document).ready(function($) {
             $btn.removeClass('loading');
         });
     });
-    
+
     // Place bid
     $('.aih-bid-btn').on('click', function() {
         var $btn = $(this);
@@ -542,15 +549,15 @@ jQuery(document).ready(function($) {
         var $msg = $card.find('.aih-bid-message');
         var id = $btn.data('id');
         var amount = parseInt($input.val());
-        
+
         if (!amount || amount < 1) {
             $msg.text('Enter a valid bid').addClass('error').show();
             return;
         }
-        
+
         $btn.prop('disabled', true).text('...');
         $msg.hide();
-        
+
         $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
             if (r.success) {
                 $msg.removeClass('error').addClass('success').text('Bid placed!').show();
@@ -572,12 +579,12 @@ jQuery(document).ready(function($) {
             $btn.prop('disabled', false).text('Bid');
         });
     });
-    
+
     // Enter key to bid
     $('.aih-bid-input').on('keypress', function(e) {
         if (e.which === 13) $(this).closest('.aih-card').find('.aih-bid-btn').click();
     });
-    
+
     // View toggle (grid vs single column)
     $('.aih-view-btn').on('click', function() {
         var view = $(this).data('view');
@@ -592,6 +599,9 @@ jQuery(document).ready(function($) {
     });
 
     // Countdown timer functionality
+    var serverTime = parseInt($('#aih-gallery-wrapper').data('server-time')) || new Date().getTime();
+    var timeOffset = serverTime - new Date().getTime();
+
     function updateCountdowns() {
         $('.aih-time-remaining').each(function() {
             var $el = $(this);
@@ -599,7 +609,7 @@ jQuery(document).ready(function($) {
             if (!endTime) return;
 
             var end = new Date(endTime.replace(/-/g, '/')).getTime();
-            var now = new Date().getTime();
+            var now = new Date().getTime() + timeOffset;
             var diff = end - now;
 
             if (diff <= 0) {
@@ -650,5 +660,3 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-
-

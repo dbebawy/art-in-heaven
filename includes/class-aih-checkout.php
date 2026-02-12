@@ -44,12 +44,13 @@ class AIH_Checkout {
              FROM $bids_table b
              JOIN $art_table a ON b.art_piece_id = a.id
              LEFT JOIN $order_items_table oi ON oi.art_piece_id = a.id
-             WHERE b.bidder_id = %s 
-             AND b.is_winning = 1 
-             AND (a.auction_end < NOW() OR a.status = 'ended')
+             WHERE b.bidder_id = %s
+             AND b.is_winning = 1
+             AND (a.auction_end < %s OR a.status = 'ended')
              AND oi.id IS NULL
              ORDER BY a.auction_end DESC",
-            $bidder_id
+            $bidder_id,
+            current_time('mysql')
         ));
     }
     
@@ -188,7 +189,13 @@ class AIH_Checkout {
     public function update_payment_status($order_id, $status, $method = '', $reference = '', $notes = '') {
         global $wpdb;
         $orders_table = AIH_Database::get_table('orders');
-        
+
+        // Validate status against allowlist
+        $allowed_statuses = array('pending', 'paid', 'refunded', 'failed');
+        if (!in_array($status, $allowed_statuses, true)) {
+            return false;
+        }
+
         $data = array('payment_status' => $status, 'updated_at' => current_time('mysql'));
         if (!empty($method)) $data['payment_method'] = $method;
         if (!empty($reference)) $data['payment_reference'] = $reference;

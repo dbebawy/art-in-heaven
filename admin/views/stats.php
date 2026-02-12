@@ -6,6 +6,7 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+if (!isset($art_pieces)) { $art_pieces = array(); }
 ?>
 <style>
 /* stats minimal overrides - main styles in aih-admin.css */
@@ -13,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 <div class="wrap aih-admin-wrap">
     <h1><?php _e('Engagement Statistics', 'art-in-heaven'); ?></h1>
-    
+
     <div class="aih-stats-overview">
         <?php
         $total_bidders = 0;
@@ -21,7 +22,7 @@ if (!defined('ABSPATH')) {
         $active_with_bids = 0;
         $total_pieces = count($art_pieces);
         $pieces_with_bids = 0;
-        
+
         foreach ($art_pieces as $piece) {
             $total_bidders += $piece->unique_bidders;
             $total_bids_sum += $piece->total_bids;
@@ -32,36 +33,36 @@ if (!defined('ABSPATH')) {
                 }
             }
         }
-        
+
         $bid_rate_percent = $total_pieces > 0 ? round(($pieces_with_bids / $total_pieces) * 100) : 0;
         ?>
-        
+
         <div class="aih-stat-card aih-stat-bids">
             <span class="aih-stat-number"><?php echo $bid_rate_percent; ?>%</span>
             <span class="aih-stat-label"><?php _e('With Bids', 'art-in-heaven'); ?></span>
             <span class="aih-stat-sublabel"><?php printf(__('%d of %d pieces', 'art-in-heaven'), $pieces_with_bids, $total_pieces); ?></span>
         </div>
-        
+
         <div class="aih-stat-card">
             <span class="aih-stat-number"><?php echo $total_bidders; ?></span>
             <span class="aih-stat-label"><?php _e('Total Unique Bidders', 'art-in-heaven'); ?></span>
         </div>
-        
+
         <div class="aih-stat-card">
             <span class="aih-stat-number"><?php echo $total_bids_sum; ?></span>
             <span class="aih-stat-label"><?php _e('Total Bids Placed', 'art-in-heaven'); ?></span>
         </div>
-        
+
         <div class="aih-stat-card aih-stat-active">
             <span class="aih-stat-number"><?php echo $active_with_bids; ?></span>
             <span class="aih-stat-label"><?php _e('Active Auctions with Bids', 'art-in-heaven'); ?></span>
         </div>
     </div>
-    
+
     <!-- Statistics by Tier - Individual Art Pieces -->
     <h2 style="margin-top: 30px;"><?php _e('Statistics by Tier', 'art-in-heaven'); ?></h2>
     <p class="description"><?php _e('Click column headers to sort. Shows individual art pieces sorted by tier.', 'art-in-heaven'); ?></p>
-    
+
     <?php
     // Sort art pieces by tier, then by art_id
     $sorted_pieces = $art_pieces;
@@ -72,7 +73,7 @@ if (!defined('ABSPATH')) {
         if ($cmp !== 0) return $cmp;
         return strcmp($a->art_id, $b->art_id);
     });
-    
+
     // Calculate tier totals for summary row
     $tier_stats = array();
     foreach ($art_pieces as $piece) {
@@ -87,7 +88,7 @@ if (!defined('ABSPATH')) {
         if ($piece->total_bids > 0) $tier_stats[$tier]['with_bids']++;
     }
     ?>
-    
+
     <div class="aih-table-wrap">
     <table class="wp-list-table widefat fixed striped aih-tier-table" id="aih-tier-pivot">
         <thead>
@@ -105,9 +106,9 @@ if (!defined('ABSPATH')) {
             </tr>
         </thead>
         <tbody>
-            <?php 
+            <?php
             $current_tier = null;
-            foreach ($sorted_pieces as $piece): 
+            foreach ($sorted_pieces as $piece):
                 $tier = !empty($piece->tier) ? $piece->tier : __('No Tier', 'art-in-heaven');
                 $show_tier = ($tier !== $current_tier);
                 $current_tier = $tier;
@@ -127,7 +128,7 @@ if (!defined('ABSPATH')) {
                 </td>
                 <td><code><?php echo esc_html($piece->art_id); ?></code></td>
                 <td>
-                    <a href="<?php echo admin_url('admin.php?page=art-in-heaven-art&stats=1&id=' . $piece->id); ?>">
+                    <a href="<?php echo admin_url('admin.php?page=art-in-heaven-art&stats=1&id=' . intval($piece->id)); ?>">
                         <?php echo esc_html($piece->title); ?>
                     </a>
                 </td>
@@ -167,7 +168,7 @@ if (!defined('ABSPATH')) {
         </tbody>
     </table>
     </div>
-    
+
     <!-- Tier Summary -->
     <h2 style="margin-top: 30px;"><?php _e('Tier Summary', 'art-in-heaven'); ?></h2>
     <div class="aih-table-wrap">
@@ -183,21 +184,21 @@ if (!defined('ABSPATH')) {
             </tr>
         </thead>
         <tbody>
-            <?php ksort($tier_stats); foreach ($tier_stats as $tier => $stats): 
-                $tier_bid_rate = $total_bids_sum > 0 ? round(($stats['bids'] / $total_bids_sum) * 100, 1) : 0;
+            <?php ksort($tier_stats); foreach ($tier_stats as $tier => $tier_data):
+                $tier_bid_rate = $total_bids_sum > 0 ? round(($tier_data['bids'] / $total_bids_sum) * 100, 1) : 0;
             ?>
             <tr>
                 <td><strong><?php echo esc_html($tier); ?></strong></td>
-                <td><?php echo $stats['count']; ?></td>
+                <td><?php echo $tier_data['count']; ?></td>
                 <td>
-                    <?php if ($stats['with_bids'] > 0): ?>
-                        <span style="color: #4a7c59; font-weight: 600;"><?php echo $stats['with_bids']; ?> <?php _e('Yes', 'art-in-heaven'); ?></span>
+                    <?php if ($tier_data['with_bids'] > 0): ?>
+                        <span style="color: #4a7c59; font-weight: 600;"><?php echo $tier_data['with_bids']; ?> <?php _e('Yes', 'art-in-heaven'); ?></span>
                     <?php else: ?>
                         <span style="color: #a63d40;"><?php _e('No', 'art-in-heaven'); ?></span>
                     <?php endif; ?>
-                    <span style="color: #9ca3af;"> / <?php echo $stats['count'] - $stats['with_bids']; ?> <?php _e('No', 'art-in-heaven'); ?></span>
+                    <span style="color: #9ca3af;"> / <?php echo $tier_data['count'] - $tier_data['with_bids']; ?> <?php _e('No', 'art-in-heaven'); ?></span>
                 </td>
-                <td style="font-weight: 600;"><?php echo $stats['bids']; ?></td>
+                <td style="font-weight: 600;"><?php echo $tier_data['bids']; ?></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div style="flex: 1; max-width: 100px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
@@ -206,16 +207,16 @@ if (!defined('ABSPATH')) {
                         <span style="min-width: 45px;"><?php echo esc_html($tier_bid_rate); ?>%</span>
                     </div>
                 </td>
-                <td>$<?php echo number_format($stats['value'], 0); ?></td>
+                <td>$<?php echo number_format($tier_data['value'], 0); ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table>
     </div>
-    
+
     <!-- Individual Art Pieces (without image) -->
     <h2 style="margin-top: 30px;"><?php _e('All Art Pieces', 'art-in-heaven'); ?></h2>
-    
+
     <div class="aih-table-wrap">
     <table class="wp-list-table widefat fixed striped aih-stats-table">
         <thead>
@@ -237,7 +238,7 @@ if (!defined('ABSPATH')) {
                     <td colspan="9"><?php _e('No art pieces found.', 'art-in-heaven'); ?></td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($art_pieces as $piece): 
+                <?php foreach ($art_pieces as $piece):
                     $piece_bid_rate = $total_bids_sum > 0 ? round(($piece->total_bids / $total_bids_sum) * 100, 1) : 0;
                 ?>
                     <tr>
@@ -280,11 +281,10 @@ if (!defined('ABSPATH')) {
                             <?php endif; ?>
                         </td>
                         <td class="aih-col-stat">
-                            <?php 
+                            <?php
                             if ($piece->last_bid_time) {
-                                $diff = current_time('timestamp') - strtotime($piece->last_bid_time);
                                 echo '<span class="aih-time-ago">';
-                                echo human_time_diff(strtotime($piece->last_bid_time), current_time('timestamp'));
+                                echo human_time_diff(strtotime($piece->last_bid_time), time());
                                 echo ' ' . __('ago', 'art-in-heaven');
                                 echo '</span>';
                             } else {
@@ -301,7 +301,7 @@ if (!defined('ABSPATH')) {
         </tbody>
     </table>
     </div>
-    
+
     <div class="aih-export-section">
         <h2><?php _e('Export Data', 'art-in-heaven'); ?></h2>
         <p><?php _e('Export engagement data for further analysis:', 'art-in-heaven'); ?></p>
@@ -319,11 +319,11 @@ jQuery(document).ready(function($) {
     var $tierTable = $('#aih-tier-pivot');
     var $tierTbody = $tierTable.find('tbody');
     var currentSort = { col: null, dir: 'asc' };
-    
+
     $tierTable.find('th.sortable').on('click', function() {
         var $th = $(this);
         var sortKey = $th.data('sort');
-        
+
         // Toggle direction
         if (currentSort.col === sortKey) {
             currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
@@ -331,17 +331,17 @@ jQuery(document).ready(function($) {
             currentSort.col = sortKey;
             currentSort.dir = 'asc';
         }
-        
+
         // Update header icons
         $tierTable.find('th.sortable').removeClass('sorted-asc sorted-desc');
         $th.addClass('sorted-' + currentSort.dir);
-        
+
         // Sort rows
         var $rows = $tierTbody.find('tr').get();
         $rows.sort(function(a, b) {
             var aVal = $(a).data(sortKey);
             var bVal = $(b).data(sortKey);
-            
+
             // Handle string vs number
             if (sortKey === 'tier' || sortKey === 'art_id' || sortKey === 'title') {
                 aVal = String(aVal || '').toLowerCase();
@@ -355,17 +355,17 @@ jQuery(document).ready(function($) {
                 return currentSort.dir === 'asc' ? aVal - bVal : bVal - aVal;
             }
         });
-        
+
         $.each($rows, function(i, row) {
             $tierTbody.append(row);
         });
     });
-    
+
     // CSV Export
     $('#aih-export-csv').on('click', function() {
         var data = [];
         data.push(['Art ID', 'Title', 'Artist', 'Tier', 'Status', 'Unique Bidders', 'Total Bids', 'Current Bid']);
-        
+
         $('#aih-tier-pivot tbody tr').each(function() {
             var $row = $(this);
             var row = [];
@@ -379,13 +379,13 @@ jQuery(document).ready(function($) {
             row.push($row.data('current_bid'));
             data.push(row);
         });
-        
+
         var csv = data.map(function(row) {
             return row.map(function(cell) {
                 return '"' + String(cell).replace(/"/g, '""') + '"';
             }).join(',');
         }).join('\n');
-        
+
         var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);

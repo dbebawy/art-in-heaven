@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin Pickup View
- * 
+ *
  * Manages pickup status for paid orders
  */
 
@@ -74,15 +74,24 @@ if ($current_tab === 'picked_up') {
     );
 }
 
-// Get items for each order (only existing art pieces)
-foreach ($orders as $order) {
-    $order->items = $wpdb->get_results($wpdb->prepare(
-        "SELECT oi.*, a.art_id, a.title, a.artist
-         FROM {$order_items_table} oi
-         JOIN {$art_table} a ON oi.art_piece_id = a.id
-         WHERE oi.order_id = %d",
-        $order->id
-    ));
+// Batch load items for all orders (instead of N+1 queries)
+$order_ids = wp_list_pluck($orders, 'id');
+if (!empty($order_ids)) {
+    $ids_placeholder = implode(',', array_map('intval', $order_ids));
+    $all_items = $wpdb->get_results("
+        SELECT oi.*, a.art_id, a.title, a.artist
+        FROM {$order_items_table} oi
+        JOIN {$art_table} a ON oi.art_piece_id = a.id
+        WHERE oi.order_id IN ({$ids_placeholder})
+    ");
+    // Group items by order_id
+    $items_by_order = array();
+    foreach ($all_items as $item) {
+        $items_by_order[$item->order_id][] = $item;
+    }
+    foreach ($orders as $order) {
+        $order->items = isset($items_by_order[$order->id]) ? $items_by_order[$order->id] : array();
+    }
 }
 ?>
 
@@ -91,7 +100,7 @@ foreach ($orders as $order) {
         <span class="dashicons dashicons-archive" style="font-size: 28px; margin-right: 10px;"></span>
         <?php _e('Pickup Management', 'art-in-heaven'); ?>
     </h1>
-    
+
     <!-- Stats Cards -->
     <div class="aih-stats-grid" style="margin: 20px 0;">
         <div class="aih-stat-card">
@@ -99,7 +108,7 @@ foreach ($orders as $order) {
                 <span class="dashicons dashicons-clock"></span>
             </div>
             <div class="aih-stat-content">
-                <div class="aih-stat-number"><?php echo $ready_count; ?></div>
+                <div class="aih-stat-number"><?php echo intval($ready_count); ?></div>
                 <div class="aih-stat-label"><?php _e('Ready for Pickup', 'art-in-heaven'); ?></div>
             </div>
         </div>
@@ -108,26 +117,26 @@ foreach ($orders as $order) {
                 <span class="dashicons dashicons-yes-alt"></span>
             </div>
             <div class="aih-stat-content">
-                <div class="aih-stat-number"><?php echo $picked_up_count; ?></div>
+                <div class="aih-stat-number"><?php echo intval($picked_up_count); ?></div>
                 <div class="aih-stat-label"><?php _e('Picked Up', 'art-in-heaven'); ?></div>
             </div>
         </div>
     </div>
-    
+
     <!-- Tabs -->
     <nav class="nav-tab-wrapper">
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-pickup&tab=ready'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-pickup&tab=ready'); ?>"
            class="nav-tab <?php echo $current_tab === 'ready' ? 'nav-tab-active' : ''; ?>">
-            <?php _e('Ready for Pickup', 'art-in-heaven'); ?> 
-            <span class="aih-tab-count"><?php echo $ready_count; ?></span>
+            <?php _e('Ready for Pickup', 'art-in-heaven'); ?>
+            <span class="aih-tab-count"><?php echo intval($ready_count); ?></span>
         </a>
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-pickup&tab=picked_up'); ?>" 
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-pickup&tab=picked_up'); ?>"
            class="nav-tab <?php echo $current_tab === 'picked_up' ? 'nav-tab-active' : ''; ?>">
             <?php _e('Picked Up', 'art-in-heaven'); ?>
-            <span class="aih-tab-count"><?php echo $picked_up_count; ?></span>
+            <span class="aih-tab-count"><?php echo intval($picked_up_count); ?></span>
         </a>
     </nav>
-    
+
     <!-- Search Bar -->
     <div class="aih-pickup-search-bar">
         <span class="dashicons dashicons-search"></span>
@@ -167,7 +176,7 @@ foreach ($orders as $order) {
                             implode(' ', $search_items)
                         );
                     ?>
-                    <div class="aih-pickup-card" data-order-id="<?php echo $order->id; ?>" data-search="<?php echo esc_attr($search_data); ?>">
+                    <div class="aih-pickup-card" data-order-id="<?php echo intval($order->id); ?>" data-search="<?php echo esc_attr($search_data); ?>">
                         <div class="aih-pickup-header">
                             <div class="aih-pickup-order-info">
                                 <span class="aih-order-number"><?php echo esc_html($order->order_number); ?></span>
@@ -176,7 +185,7 @@ foreach ($orders as $order) {
                                 </span>
                             </div>
                         </div>
-                        
+
                         <div class="aih-pickup-bidder">
                             <div class="aih-bidder-name">
                                 <strong><?php echo esc_html(trim($order->name_first . ' ' . $order->name_last) ?: 'Unknown'); ?></strong>
@@ -191,7 +200,7 @@ foreach ($orders as $order) {
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <div class="aih-pickup-items">
                             <div class="aih-items-header">
                                 <strong><?php printf(_n('%d Item', '%d Items', count($order->items), 'art-in-heaven'), count($order->items)); ?></strong>
@@ -206,7 +215,7 @@ foreach ($orders as $order) {
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        
+
                         <div class="aih-pickup-footer">
                             <div class="aih-pickup-dates">
                                 <span title="<?php esc_attr_e('Payment Date', 'art-in-heaven'); ?>">
@@ -220,22 +229,22 @@ foreach ($orders as $order) {
                                     </span>
                                 <?php endif; ?>
                             </div>
-                            
+
                             <div class="aih-pickup-actions">
                                 <?php if ($order->pickup_status !== 'picked_up'): ?>
-                                    <button type="button" class="button button-primary aih-mark-picked-up" data-order-id="<?php echo $order->id; ?>" data-order-number="<?php echo esc_attr($order->order_number); ?>">
+                                    <button type="button" class="button button-primary aih-mark-picked-up" data-order-id="<?php echo intval($order->id); ?>" data-order-number="<?php echo esc_attr($order->order_number); ?>">
                                         <span class="dashicons dashicons-yes"></span>
                                         <?php _e('Mark as Picked Up', 'art-in-heaven'); ?>
                                     </button>
                                 <?php else: ?>
-                                    <button type="button" class="button aih-undo-pickup" data-order-id="<?php echo $order->id; ?>">
+                                    <button type="button" class="button aih-undo-pickup" data-order-id="<?php echo intval($order->id); ?>">
                                         <span class="dashicons dashicons-undo"></span>
                                         <?php _e('Undo Pickup', 'art-in-heaven'); ?>
                                     </button>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <?php if ($order->pickup_status === 'picked_up' && (!empty($order->pickup_by) || !empty($order->pickup_notes))): ?>
                             <div class="aih-pickup-info-footer">
                                 <?php if (!empty($order->pickup_by)): ?>
@@ -784,26 +793,26 @@ foreach ($orders as $order) {
         align-items: flex-start;
         gap: 10px;
     }
-    
+
     .aih-pickup-item {
         flex-wrap: wrap;
     }
-    
+
     .aih-item-title {
         width: 100%;
         order: -1;
     }
-    
+
     .aih-pickup-footer {
         flex-direction: column;
         gap: 15px;
         align-items: stretch;
     }
-    
+
     .aih-pickup-actions {
         display: flex;
     }
-    
+
     .aih-pickup-actions .button {
         flex: 1;
         justify-content: center;
@@ -836,32 +845,32 @@ jQuery(document).ready(function($) {
 
     var $modal = $('#aih-pickup-modal');
     var currentOrderId = null;
-    
+
     // Open modal when clicking Mark as Picked Up
     $('.aih-mark-picked-up').on('click', function() {
         var $btn = $(this);
         currentOrderId = $btn.data('order-id');
         var orderNumber = $btn.data('order-number');
-        
+
         // Reset form
         $('#pickup-order-id').val(currentOrderId);
         $('#pickup-by').val('');
         $('#pickup-notes').val('');
-        
-        // Set order info
-        $('.aih-modal-order-info').html('<?php _e('Order:', 'art-in-heaven'); ?> <strong>' + orderNumber + '</strong>');
-        
+
+        // Set order info (use .text() to prevent XSS)
+        $('.aih-modal-order-info').text('<?php echo esc_js(__('Order:', 'art-in-heaven')); ?> ' + orderNumber);
+
         // Show modal
         $modal.fadeIn(200);
         $('#pickup-by').focus();
     });
-    
+
     // Close modal
     $('.aih-modal-close, .aih-modal-cancel').on('click', function() {
         $modal.fadeOut(200);
         currentOrderId = null;
     });
-    
+
     // Close on backdrop click
     $modal.on('click', function(e) {
         if (e.target === this) {
@@ -869,7 +878,7 @@ jQuery(document).ready(function($) {
             currentOrderId = null;
         }
     });
-    
+
     // Close on escape
     $(document).on('keydown', function(e) {
         if (e.key === 'Escape' && $modal.is(':visible')) {
@@ -877,21 +886,21 @@ jQuery(document).ready(function($) {
             currentOrderId = null;
         }
     });
-    
+
     // Confirm pickup
     $('#aih-confirm-pickup').on('click', function() {
         var $btn = $(this);
         var pickupBy = $('#pickup-by').val().trim();
         var pickupNotes = $('#pickup-notes').val().trim();
-        
+
         if (!pickupBy) {
-            alert('<?php _e('Please enter your name', 'art-in-heaven'); ?>');
+            alert('<?php echo esc_js(__('Please enter your name', 'art-in-heaven')); ?>');
             $('#pickup-by').focus();
             return;
         }
-        
-        $btn.prop('disabled', true).text('<?php _e('Processing...', 'art-in-heaven'); ?>');
-        
+
+        $btn.prop('disabled', true).text('<?php echo esc_js(__('Processing...', 'art-in-heaven')); ?>');
+
         $.post(ajaxurl, {
             action: 'aih_update_pickup_status',
             nonce: aihAdmin.nonce,
@@ -903,15 +912,15 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 location.reload();
             } else {
-                alert(response.data ? response.data.message : '<?php _e('Error updating pickup status', 'art-in-heaven'); ?>');
-                $btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> <?php _e('Confirm Pickup', 'art-in-heaven'); ?>');
+                alert(response.data ? response.data.message : '<?php echo esc_js(__('Error updating pickup status', 'art-in-heaven')); ?>');
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> <?php echo esc_js(__('Confirm Pickup', 'art-in-heaven')); ?>');
             }
         }).fail(function() {
-            alert('<?php _e('Request failed', 'art-in-heaven'); ?>');
-            $btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> <?php _e('Confirm Pickup', 'art-in-heaven'); ?>');
+            alert('<?php echo esc_js(__('Request failed', 'art-in-heaven')); ?>');
+            $btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> <?php echo esc_js(__('Confirm Pickup', 'art-in-heaven')); ?>');
         });
     });
-    
+
     // Submit form on enter in name field
     $('#pickup-by').on('keypress', function(e) {
         if (e.which === 13) {
@@ -919,18 +928,18 @@ jQuery(document).ready(function($) {
             $('#aih-confirm-pickup').click();
         }
     });
-    
+
     // Undo pickup
     $('.aih-undo-pickup').on('click', function() {
         var $btn = $(this);
         var orderId = $btn.data('order-id');
-        
-        if (!confirm('<?php _e('Undo pickup status for this order?', 'art-in-heaven'); ?>')) {
+
+        if (!confirm('<?php echo esc_js(__('Undo pickup status for this order?', 'art-in-heaven')); ?>')) {
             return;
         }
-        
-        $btn.prop('disabled', true).text('<?php _e('Processing...', 'art-in-heaven'); ?>');
-        
+
+        $btn.prop('disabled', true).text('<?php echo esc_js(__('Processing...', 'art-in-heaven')); ?>');
+
         $.post(ajaxurl, {
             action: 'aih_update_pickup_status',
             nonce: aihAdmin.nonce,
@@ -940,12 +949,12 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 location.reload();
             } else {
-                alert(response.data ? response.data.message : '<?php _e('Error updating pickup status', 'art-in-heaven'); ?>');
-                $btn.prop('disabled', false).html('<span class="dashicons dashicons-undo"></span> <?php _e('Undo Pickup', 'art-in-heaven'); ?>');
+                alert(response.data ? response.data.message : '<?php echo esc_js(__('Error updating pickup status', 'art-in-heaven')); ?>');
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-undo"></span> <?php echo esc_js(__('Undo Pickup', 'art-in-heaven')); ?>');
             }
         }).fail(function() {
-            alert('<?php _e('Request failed', 'art-in-heaven'); ?>');
-            $btn.prop('disabled', false).html('<span class="dashicons dashicons-undo"></span> <?php _e('Undo Pickup', 'art-in-heaven'); ?>');
+            alert('<?php echo esc_js(__('Request failed', 'art-in-heaven')); ?>');
+            $btn.prop('disabled', false).html('<span class="dashicons dashicons-undo"></span> <?php echo esc_js(__('Undo Pickup', 'art-in-heaven')); ?>');
         });
     });
 });

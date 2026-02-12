@@ -19,11 +19,11 @@ rsort($years);
 ?>
 <div class="wrap aih-admin-wrap">
     <h1><?php _e('Migration Tools', 'art-in-heaven'); ?></h1>
-    
+
     <div class="aih-migration-section">
         <h2><?php _e('Year-to-Year Migration', 'art-in-heaven'); ?></h2>
         <p><?php _e('Migrate data from one auction year to another. This is useful for setting up a new year while keeping historical data.', 'art-in-heaven'); ?></p>
-        
+
         <table class="form-table">
             <tr>
                 <th><?php _e('Source Year', 'art-in-heaven'); ?></th>
@@ -49,17 +49,17 @@ rsort($years);
                 </td>
             </tr>
         </table>
-        
+
         <button type="button" id="aih-migrate-btn" class="button button-primary"><?php _e('Start Migration', 'art-in-heaven'); ?></button>
         <span id="aih-migrate-result"></span>
     </div>
-    
+
     <hr>
-    
+
     <div class="aih-migration-section">
         <h2><?php _e('Existing Auction Years', 'art-in-heaven'); ?></h2>
         <p><?php _e('Database tables found for the following years:', 'art-in-heaven'); ?></p>
-        
+
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -72,7 +72,7 @@ rsort($years);
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($years as $year): 
+                <?php foreach ($years as $year):
                     $art_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$year}_ArtPieces");
                     $bids_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$year}_Bids");
                     $bidders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$year}_Bidders");
@@ -97,12 +97,12 @@ rsort($years);
             </tbody>
         </table>
     </div>
-    
+
     <hr>
-    
+
     <div class="aih-migration-section">
         <h2><?php _e('Database Maintenance', 'art-in-heaven'); ?></h2>
-        
+
         <table class="form-table">
             <tr>
                 <th><?php _e('Create New Year Tables', 'art-in-heaven'); ?></th>
@@ -123,23 +123,23 @@ rsort($years);
 <script>
 jQuery(document).ready(function($) {
     $('#aih-migrate-btn').on('click', function() {
-        if (!confirm('<?php _e('This will copy data to the target year. Continue?', 'art-in-heaven'); ?>')) return;
-        
+        if (!confirm('<?php echo esc_js(__('This will copy data to the target year. Continue?', 'art-in-heaven')); ?>')) return;
+
         var $btn = $(this).prop('disabled', true);
         var $result = $('#aih-migrate-result').text('Migrating...');
-        
+
         // Migration would be handled server-side - placeholder for now
         setTimeout(function() {
             $result.html('<span style="color:green;">✓ Migration feature coming soon</span>');
             $btn.prop('disabled', false);
         }, 1000);
     });
-    
+
     $('#aih-create-year-btn').on('click', function() {
         var year = $('#aih-new-year').val();
         var $btn = $(this).prop('disabled', true);
         var $result = $('#aih-create-result').text('Creating...');
-        
+
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -155,9 +155,9 @@ jQuery(document).ready(function($) {
             complete: function() { $btn.prop('disabled', false); }
         });
     });
-    
+
     $('.aih-switch-year').on('click', function() {
-        if (!confirm('<?php _e('Switch to this year? You will need to save settings.', 'art-in-heaven'); ?>')) return;
+        if (!confirm('<?php echo esc_js(__('Switch to this year? You will need to save settings.', 'art-in-heaven')); ?>')) return;
         var year = parseInt($(this).data('year'), 10);
         if (isNaN(year) || year < 2020 || year > 2099) return;
         window.location.href = '<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-settings')); ?>&switch_year=' + year;

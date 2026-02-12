@@ -29,7 +29,12 @@ class AIH_Cache {
      * Default expiration time in seconds
      */
     const DEFAULT_EXPIRY = HOUR_IN_SECONDS;
-    
+
+    /**
+     * Sentinel value to distinguish "not cached" from "cached null"
+     */
+    const CACHE_MISS = '__AIH_CACHE_MISS__';
+
     /**
      * Track cache keys by group for invalidation
      * 
@@ -133,18 +138,16 @@ class AIH_Cache {
      * @return mixed
      */
     public static function remember($key, $callback, $expiry = null, $group = '') {
-        $value = self::get($key);
-        
-        if ($value !== null) {
+        $value = self::get($key, self::CACHE_MISS);
+
+        if ($value !== self::CACHE_MISS) {
             return $value;
         }
-        
+
         $value = call_user_func($callback);
-        
-        if ($value !== null) {
-            self::set($key, $value, $expiry, $group);
-        }
-        
+
+        self::set($key, $value, $expiry, $group);
+
         return $value;
     }
     
@@ -205,7 +208,7 @@ class AIH_Cache {
         );
         
         // Clear object cache group if available
-        if (wp_using_ext_object_cache()) {
+        if (wp_using_ext_object_cache() && function_exists('wp_cache_flush_group')) {
             wp_cache_flush_group(self::GROUP);
         }
         
@@ -243,8 +246,9 @@ class AIH_Cache {
         
         $count = 0;
         foreach ($expired as $timeout_key) {
-            $transient_key = str_replace('_transient_timeout_', '', $timeout_key);
-            delete_transient(str_replace(self::PREFIX, '', $transient_key));
+            // Strip '_transient_timeout_' to get the transient name
+            $transient_name = substr($timeout_key, strlen('_transient_timeout_'));
+            delete_transient($transient_name);
             $count++;
         }
         

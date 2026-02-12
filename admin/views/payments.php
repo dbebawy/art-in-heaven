@@ -20,7 +20,13 @@ $bids_table = AIH_Database::get_table('bids');
 if (isset($_POST['aih_update_payment']) && wp_verify_nonce($_POST['aih_payment_nonce'], 'aih_update_payment')) {
     $art_piece_id = intval($_POST['art_piece_id']);
     $payment_status = sanitize_text_field($_POST['payment_status']);
+    if (!in_array($payment_status, array('pending', 'paid', 'refunded'), true)) {
+        $payment_status = 'pending';
+    }
     $payment_method = sanitize_text_field($_POST['payment_method']);
+    if (!in_array($payment_method, array('pushpay', 'cash', 'check', 'card', 'other'), true)) {
+        $payment_method = 'other';
+    }
     $payment_reference = sanitize_text_field($_POST['payment_reference']);
     $payment_notes = sanitize_textarea_field($_POST['payment_notes']);
     
@@ -61,7 +67,7 @@ if (isset($_POST['aih_update_payment']) && wp_verify_nonce($_POST['aih_payment_n
         
         if ($winning_bid) {
             // Create new order
-            $order_number = 'AIH-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+            $order_number = 'AIH-' . strtoupper(bin2hex(random_bytes(4)));
             $tax_rate = floatval(get_option('aih_tax_rate', 0));
             $tax = $winning_bid->bid_amount * ($tax_rate / 100);
             $total = $winning_bid->bid_amount + $tax;
@@ -214,7 +220,7 @@ $won_without_orders = $wpdb->get_results(
                     <td data-label="<?php esc_attr_e('Amount', 'art-in-heaven'); ?>"><strong>$<?php echo number_format($item->winning_amount, 2); ?></strong></td>
                     <td class="aih-col-actions" data-label="">
                         <button type="button" class="button aih-mark-paid-btn" 
-                                data-art-id="<?php echo $item->id; ?>"
+                                data-art-id="<?php echo intval($item->id); ?>"
                                 data-title="<?php echo esc_attr($item->title); ?>"
                                 data-amount="<?php echo esc_attr($item->winning_amount); ?>">
                             <?php _e('Mark Payment', 'art-in-heaven'); ?>
@@ -250,7 +256,7 @@ $won_without_orders = $wpdb->get_results(
             
             <button type="submit" class="button"><?php _e('Filter', 'art-in-heaven'); ?></button>
             <?php if ($filter_status || $filter_method): ?>
-            <a href="<?php echo admin_url('admin.php?page=art-in-heaven-payments'); ?>" class="button"><?php _e('Clear', 'art-in-heaven'); ?></a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-payments')); ?>" class="button"><?php _e('Clear', 'art-in-heaven'); ?></a>
             <?php endif; ?>
         </form>
         
@@ -283,7 +289,7 @@ $won_without_orders = $wpdb->get_results(
             <?php foreach ($orders as $order): ?>
             <tr>
                 <td data-label="<?php esc_attr_e('Order #', 'art-in-heaven'); ?>">
-                    <a href="<?php echo admin_url('admin.php?page=art-in-heaven-orders&order_id=' . $order->id); ?>">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-orders&order_id=' . intval($order->id))); ?>">
                         <strong><?php echo esc_html($order->order_number); ?></strong>
                     </a>
                 </td>
@@ -329,7 +335,7 @@ $won_without_orders = $wpdb->get_results(
                 </td>
                 <td class="aih-col-actions" data-label="">
                     <button type="button" class="button button-small aih-update-order-btn"
-                            data-order-id="<?php echo $order->id; ?>"
+                            data-order-id="<?php echo intval($order->id); ?>"
                             data-order-number="<?php echo esc_attr($order->order_number); ?>"
                             data-status="<?php echo esc_attr($order->payment_status); ?>"
                             data-method="<?php echo esc_attr($order->payment_method); ?>"
@@ -374,15 +380,15 @@ $won_without_orders = $wpdb->get_results(
         
         <!-- Transaction Filters -->
         <div class="aih-filter-bar" style="margin: 15px 0;">
-            <a href="<?php echo admin_url('admin.php?page=art-in-heaven-payments'); ?>" 
+            <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-payments')); ?>"
                class="button <?php echo !$filter_matched ? 'button-primary' : ''; ?>">
                 <?php _e('All', 'art-in-heaven'); ?>
             </a>
-            <a href="<?php echo admin_url('admin.php?page=art-in-heaven-payments&matched=yes'); ?>" 
+            <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-payments&matched=yes')); ?>"
                class="button <?php echo $filter_matched === 'yes' ? 'button-primary' : ''; ?>">
                 <?php _e('Matched', 'art-in-heaven'); ?>
             </a>
-            <a href="<?php echo admin_url('admin.php?page=art-in-heaven-payments&matched=no'); ?>" 
+            <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-payments&matched=no')); ?>"
                class="button <?php echo $filter_matched === 'no' ? 'button-primary' : ''; ?>">
                 <?php _e('Unmatched', 'art-in-heaven'); ?>
             </a>
@@ -427,7 +433,7 @@ $won_without_orders = $wpdb->get_results(
                     </td>
                     <td>
                         <?php if ($txn->order_number): ?>
-                        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-orders&order_id=' . $txn->order_id); ?>">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-orders&order_id=' . intval($txn->order_id))); ?>">
                             <?php echo esc_html($txn->order_number); ?>
                         </a>
                         <?php else: ?>
@@ -437,7 +443,7 @@ $won_without_orders = $wpdb->get_results(
                     <td>
                         <?php if (!$txn->order_id): ?>
                         <button type="button" class="button button-small aih-match-txn-btn"
-                                data-txn-id="<?php echo $txn->id; ?>"
+                                data-txn-id="<?php echo intval($txn->id); ?>"
                                 data-amount="<?php echo esc_attr($txn->amount); ?>"
                                 data-payer="<?php echo esc_attr($txn->payer_name); ?>">
                             <?php _e('Match to Order', 'art-in-heaven'); ?>
@@ -457,7 +463,7 @@ $won_without_orders = $wpdb->get_results(
     <div class="aih-card" style="margin-top: 40px; background: #fef3c7; border-left: 4px solid #f59e0b;">
         <h3><?php _e('Pushpay API Not Configured', 'art-in-heaven'); ?></h3>
         <p><?php _e('To sync transactions from Pushpay, configure your API credentials in', 'art-in-heaven'); ?> 
-           <a href="<?php echo admin_url('admin.php?page=art-in-heaven-settings'); ?>"><?php _e('Settings', 'art-in-heaven'); ?></a>.
+           <a href="<?php echo esc_url(admin_url('admin.php?page=art-in-heaven-settings')); ?>"><?php _e('Settings', 'art-in-heaven'); ?></a>.
         </p>
     </div>
     <?php endif; ?>
@@ -490,7 +496,7 @@ $won_without_orders = $wpdb->get_results(
                         foreach ($pending_orders as $po): 
                             $name = trim($po->name_first . ' ' . $po->name_last);
                         ?>
-                        <option value="<?php echo $po->id; ?>" data-amount="<?php echo $po->total; ?>">
+                        <option value="<?php echo intval($po->id); ?>" data-amount="<?php echo esc_attr($po->total); ?>">
                             <?php echo esc_html($po->order_number); ?> - $<?php echo number_format($po->total, 2); ?> 
                             <?php if ($name): ?>(<?php echo esc_html($name); ?>)<?php endif; ?>
                         </option>
@@ -661,7 +667,7 @@ $won_without_orders = $wpdb->get_results(
 
 <script>
 jQuery(document).ready(function($) {
-    var nonce = '<?php echo wp_create_nonce('aih_admin_nonce'); ?>';
+    var nonce = '<?php echo esc_js(wp_create_nonce('aih_admin_nonce')); ?>';
     
     // Mark payment button (for items without orders)
     $('.aih-mark-paid-btn').on('click', function() {
@@ -770,7 +776,8 @@ jQuery(document).ready(function($) {
         var payer = $(this).data('payer');
         
         $('#aih-match-txn-id').val(txnId);
-        $('#aih-match-info').html('<?php echo esc_js(__('Transaction:', 'art-in-heaven')); ?> <strong>$' + parseFloat(amount).toFixed(2) + '</strong> <?php echo esc_js(__('from', 'art-in-heaven')); ?> <strong>' + payer + '</strong>');
+        $('#aih-match-info').empty()
+            .append(document.createTextNode('<?php echo esc_js(__('Transaction:', 'art-in-heaven')); ?> $' + parseFloat(amount).toFixed(2) + ' <?php echo esc_js(__('from', 'art-in-heaven')); ?> ' + payer));
         $('#aih-match-order').val('');
         $('#aih-match-modal').show();
     });

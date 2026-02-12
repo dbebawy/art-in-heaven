@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin Art Piece Statistics View
- * 
+ *
  * Shows detailed statistics for a single art piece
  */
 
@@ -62,9 +62,9 @@ $favorites_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $fa
 
 // Get all bids for this piece - including unsuccessful bids
 $all_bids = $wpdb->get_results($wpdb->prepare(
-    "SELECT b.*, 
-            COALESCE(bd.name_first, r.name_first, '') as name_first, 
-            COALESCE(bd.name_last, r.name_last, '') as name_last, 
+    "SELECT b.*,
+            COALESCE(bd.name_first, r.name_first, '') as name_first,
+            COALESCE(bd.name_last, r.name_last, '') as name_last,
             COALESCE(bd.email_primary, r.email_primary, '') as email_primary,
             b.bidder_id as confirmation_code
      FROM $bids_table b
@@ -77,9 +77,9 @@ $all_bids = $wpdb->get_results($wpdb->prepare(
 
 // Get winning bidder info
 $winning_bid = $wpdb->get_row($wpdb->prepare(
-    "SELECT b.*, 
-            COALESCE(bd.name_first, r.name_first, '') as name_first, 
-            COALESCE(bd.name_last, r.name_last, '') as name_last, 
+    "SELECT b.*,
+            COALESCE(bd.name_first, r.name_first, '') as name_first,
+            COALESCE(bd.name_last, r.name_last, '') as name_last,
             COALESCE(bd.email_primary, r.email_primary, '') as bidder_email,
             COALESCE(bd.phone_mobile, r.phone_mobile, '') as bidder_phone,
             b.bidder_id as confirmation_code
@@ -104,7 +104,7 @@ $is_paid = $is_sold && $order_item->payment_status === 'paid';
 
 // Determine display status
 $computed = isset($piece->computed_status) ? $piece->computed_status : $piece->status;
-$auction_ended = strtotime($piece->auction_end) < current_time('timestamp');
+$auction_ended = strtotime($piece->auction_end) < time();
 
 // For ended auctions, show Sold/Not Sold based on whether there's a winning bid
 if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
@@ -132,7 +132,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
         </a>
         <?php printf(__('Statistics: %s', 'art-in-heaven'), esc_html($piece->title)); ?>
     </h1>
-    
+
     <!-- Art Piece Info (No Image) -->
     <div class="aih-settings-section" style="margin-top: 20px;">
         <div class="aih-art-info-grid">
@@ -171,14 +171,14 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
             <div class="aih-info-row">
                 <span class="aih-info-label"><?php _e('Auction Period:', 'art-in-heaven'); ?></span>
                 <span class="aih-info-value">
-                    <?php echo date_i18n('M j, Y g:i a', strtotime($piece->auction_start)); ?> 
-                    – 
+                    <?php echo date_i18n('M j, Y g:i a', strtotime($piece->auction_start)); ?>
+                    –
                     <?php echo date_i18n('M j, Y g:i a', strtotime($piece->auction_end)); ?>
                 </span>
             </div>
         </div>
     </div>
-    
+
     <!-- Statistics Cards -->
     <div class="aih-stats-grid">
         <div class="aih-stat-card">
@@ -203,7 +203,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
         </div>
         <div class="aih-stat-card">
             <div class="aih-stat-value">
-                <?php 
+                <?php
                 if ($last_bid_time) {
                     echo date_i18n('M j, g:i a', strtotime($last_bid_time));
                 } else {
@@ -214,7 +214,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
             <div class="aih-stat-label"><?php _e('Last Bid', 'art-in-heaven'); ?></div>
         </div>
     </div>
-    
+
     <?php if ($total_bids > 0): ?>
     <div class="aih-stats-grid" style="margin-top: 20px;">
         <div class="aih-stat-card">
@@ -243,7 +243,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
         </div>
     </div>
     <?php endif; ?>
-    
+
     <!-- Winning Bidder -->
     <?php if ($winning_bid): ?>
     <div class="aih-winner-box">
@@ -260,21 +260,21 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
             <?php endif; ?>
         </p>
         <p>
-            <strong><?php _e('Winning Amount:', 'art-in-heaven'); ?></strong> 
+            <strong><?php _e('Winning Amount:', 'art-in-heaven'); ?></strong>
             $<?php echo number_format($winning_bid->bid_amount, 2); ?>
             &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong><?php _e('Bid Time:', 'art-in-heaven'); ?></strong> 
+            <strong><?php _e('Bid Time:', 'art-in-heaven'); ?></strong>
             <?php echo date_i18n('M j, Y g:i a', strtotime($winning_bid->bid_time)); ?>
         </p>
-        
+
         <?php if ($is_sold): ?>
             <p style="margin-bottom: 0;">
-                <strong><?php _e('Order:', 'art-in-heaven'); ?></strong> 
-                <a href="<?php echo admin_url('admin.php?page=art-in-heaven-orders&order_id=' . $order_item->order_id); ?>">
+                <strong><?php _e('Order:', 'art-in-heaven'); ?></strong>
+                <a href="<?php echo admin_url('admin.php?page=art-in-heaven-orders&order_id=' . intval($order_item->order_id)); ?>">
                     #<?php echo esc_html($order_item->order_number); ?>
                 </a>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
-                <strong><?php _e('Payment:', 'art-in-heaven'); ?></strong> 
+                <strong><?php _e('Payment:', 'art-in-heaven'); ?></strong>
                 <?php if ($is_paid): ?>
                     <span style="color: #155724;">✓ <?php _e('Paid', 'art-in-heaven'); ?></span>
                 <?php else: ?>
@@ -288,7 +288,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
         <?php endif; ?>
     </div>
     <?php endif; ?>
-    
+
     <!-- All Bids Table -->
     <h2><?php _e('Bid History', 'art-in-heaven'); ?></h2>
     <?php if (empty($all_bids)): ?>
@@ -299,7 +299,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
             <input type="text" id="aih-search-bids" class="regular-text" placeholder="<?php _e('Search by name, email, or code...', 'art-in-heaven'); ?>">
             <span class="aih-filter-count"><span id="aih-visible-count"><?php echo count($all_bids); ?></span> <?php _e('bids', 'art-in-heaven'); ?></span>
         </div>
-        
+
         <table class="wp-list-table widefat fixed striped" id="aih-bids-table">
             <thead>
                 <tr>
@@ -312,7 +312,7 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
                 </tr>
             </thead>
             <tbody>
-                <?php $rank = 1; foreach ($all_bids as $bid): 
+                <?php $rank = 1; foreach ($all_bids as $bid):
                     $name = trim($bid->name_first . ' ' . $bid->name_last);
                 ?>
                     <tr <?php echo !empty($bid->is_winning) ? 'class="aih-winner-row"' : ''; ?>
@@ -345,10 +345,10 @@ if ($computed === 'ended' || ($auction_ended && $piece->status !== 'draft')) {
             </tbody>
         </table>
     <?php endif; ?>
-    
+
     <!-- Actions -->
     <div class="aih-actions-bar">
-        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-add&edit=' . $piece->id); ?>" class="button button-primary">
+        <a href="<?php echo admin_url('admin.php?page=art-in-heaven-add&edit=' . intval($piece->id)); ?>" class="button button-primary">
             <?php _e('Edit Art Piece', 'art-in-heaven'); ?>
         </a>
         <a href="<?php echo admin_url('admin.php?page=art-in-heaven-art'); ?>" class="button">
@@ -366,23 +366,23 @@ jQuery(document).ready(function($) {
     var $table = $('#aih-bids-table');
     var $tbody = $table.find('tbody');
     var $rows = $tbody.find('tr');
-    
+
     // Search functionality
     $('#aih-search-bids').on('input keyup', function() {
         var search = $(this).val().toLowerCase().trim();
         var visibleCount = 0;
-        
+
         $rows.each(function() {
             var $row = $(this);
             var name = $row.data('name') || '';
             var email = $row.data('email') || '';
             var code = $row.data('code') || '';
             var show = true;
-            
+
             if (search && name.indexOf(search) === -1 && email.indexOf(search) === -1 && code.indexOf(search) === -1) {
                 show = false;
             }
-            
+
             if (show) {
                 $row.removeClass('aih-hidden');
                 visibleCount++;
@@ -390,34 +390,34 @@ jQuery(document).ready(function($) {
                 $row.addClass('aih-hidden');
             }
         });
-        
+
         $('#aih-visible-count').text(visibleCount);
     });
-    
+
     // Sorting functionality
     $('th.sortable').on('click', function() {
         var $th = $(this);
         var sortKey = $th.data('sort');
         var isAsc = $th.hasClass('asc');
-        
+
         $('th.sortable').removeClass('asc desc');
         $th.addClass(isAsc ? 'desc' : 'asc');
         var sortDir = isAsc ? -1 : 1;
-        
+
         var rows = $rows.get();
         rows.sort(function(a, b) {
             var aVal = $(a).data(sortKey);
             var bVal = $(b).data(sortKey);
-            
+
             if (typeof aVal === 'number' && typeof bVal === 'number') {
                 return (aVal - bVal) * sortDir;
             }
-            
+
             aVal = String(aVal || '');
             bVal = String(bVal || '');
             return aVal.localeCompare(bVal) * sortDir;
         });
-        
+
         $.each(rows, function(i, row) {
             $tbody.append(row);
         });

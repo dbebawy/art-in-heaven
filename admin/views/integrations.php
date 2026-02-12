@@ -341,7 +341,7 @@ $is_sandbox = get_option('aih_pushpay_sandbox', 0);
 
 <script>
 jQuery(document).ready(function($) {
-    var nonce = '<?php echo wp_create_nonce('aih_admin_nonce'); ?>';
+    var nonce = '<?php echo esc_js(wp_create_nonce('aih_admin_nonce')); ?>';
     
     // Test CCB API
     $('#aih-test-api').on('click', function() {
