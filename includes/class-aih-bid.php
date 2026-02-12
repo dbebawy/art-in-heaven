@@ -43,6 +43,7 @@ class AIH_Bid {
                 "SELECT a.id, a.starting_bid, a.auction_start, a.auction_end, a.status,
                         CASE
                             WHEN a.status = 'draft' AND a.auction_start IS NOT NULL AND a.auction_start <= %s AND (a.auction_end IS NULL OR a.auction_end > %s) THEN 'active'
+                            WHEN a.status = 'draft' AND a.auction_end IS NOT NULL AND a.auction_end <= %s THEN 'ended'
                             WHEN a.status = 'draft' THEN 'draft'
                             WHEN a.status = 'ended' THEN 'ended'
                             WHEN a.auction_end <= %s THEN 'ended'
@@ -51,7 +52,7 @@ class AIH_Bid {
                         END as computed_status,
                         (SELECT MAX(bid_amount) FROM {$this->table} WHERE art_piece_id = a.id AND bid_status = 'valid') as current_highest
                  FROM $art_table a WHERE a.id = %d FOR UPDATE",
-                $now, $now, $now, $now, $art_piece_id
+                $now, $now, $now, $now, $now, $art_piece_id
             ));
             
             if (!$art_piece) {
@@ -71,7 +72,13 @@ class AIH_Bid {
                 $wpdb->query('ROLLBACK');
                 return array('success' => false, 'message' => __('This auction has not started yet.', 'art-in-heaven'));
             }
-            
+
+            // Reject any non-active status (catches draft, or any unexpected state)
+            if ($art_piece->computed_status !== 'active') {
+                $wpdb->query('ROLLBACK');
+                return array('success' => false, 'message' => __('This auction is not accepting bids.', 'art-in-heaven'));
+            }
+
             $current_highest = floatval($art_piece->current_highest);
             $ip_address = !empty($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
             $bid_amount = floatval($amount);

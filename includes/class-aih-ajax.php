@@ -557,9 +557,19 @@ class AIH_Ajax {
                 }
             }
             
+            // Pass expected updated_at for optimistic locking (concurrent edit detection)
+            if (!empty($_POST['updated_at'])) {
+                $data['_expected_updated_at'] = sanitize_text_field($_POST['updated_at']);
+            }
+
             $result = $art_model->update($record_id, $data);
+
+            if (is_wp_error($result)) {
+                wp_send_json_error(array('message' => $result->get_error_message()));
+            }
+
             $piece = $art_model->get($record_id);
-            wp_send_json_success(array('message' => __('Updated successfully!', 'art-in-heaven'), 'id' => $record_id, 'art_id' => $piece->art_id, 'final_status' => $piece->status));
+            wp_send_json_success(array('message' => __('Updated successfully!', 'art-in-heaven'), 'id' => $record_id, 'art_id' => $piece->art_id, 'final_status' => $piece->status, 'updated_at' => $piece->updated_at));
         } else {
             // For new records, check if art_id already exists
             if (!empty($custom_art_id)) {

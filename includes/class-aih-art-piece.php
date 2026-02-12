@@ -416,10 +416,18 @@ class AIH_Art_Piece {
     
     public function update($id, $data) {
         global $wpdb;
-        
+
         $update_data = array();
         $format = array();
-        
+
+        // Optimistic locking: if caller provides _expected_updated_at,
+        // verify the row hasn't been modified since it was loaded
+        $expected_updated_at = null;
+        if (isset($data['_expected_updated_at']) && !empty($data['_expected_updated_at'])) {
+            $expected_updated_at = $data['_expected_updated_at'];
+        }
+        unset($data['_expected_updated_at']);
+
         // Check if force_status is set (admin override)
         $force_status = isset($data['force_status']) && $data['force_status'];
         unset($data['force_status']); // Don't try to save this to the database
@@ -504,12 +512,40 @@ class AIH_Art_Piece {
             }
         }
         
-        $result = $wpdb->update($this->table, $update_data, array('id' => $id), $format, array('%d'));
-        
-        if ($result !== false) {
+        // If optimistic locking is active, add updated_at to the WHERE clause
+        if ($expected_updated_at) {
+            $where = array('id' => $id);
+            $where_format = array('%d');
+
+            // Build manual query to include updated_at in WHERE
+            $set_parts = array();
+            $query_values = array();
+            foreach ($update_data as $field => $value) {
+                $set_parts[] = "`$field` = " . (array_shift($format) ?: '%s');
+                $query_values[] = $value;
+            }
+
+            $set_sql = implode(', ', $set_parts);
+            $query_values[] = $id;
+            $query_values[] = $expected_updated_at;
+
+            $result = $wpdb->query($wpdb->prepare(
+                "UPDATE {$this->table} SET $set_sql WHERE id = %d AND updated_at = %s",
+                $query_values
+            ));
+
+            // 0 rows affected means the row was modified by someone else
+            if ($result === 0) {
+                return new WP_Error('conflict', __('This record was modified by another user. Please reload and try again.', 'art-in-heaven'));
+            }
+        } else {
+            $result = $wpdb->update($this->table, $update_data, array('id' => $id), $format, array('%d'));
+        }
+
+        if ($result !== false && !is_wp_error($result)) {
             do_action('aih_art_updated', $id, $data);
         }
-        
+
         return $result;
     }
     

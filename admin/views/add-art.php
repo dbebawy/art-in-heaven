@@ -109,6 +109,7 @@ $status_options = AIH_Status::get_status_options();
     <form id="aih-art-form" class="aih-art-form">
         <?php if ($is_edit): ?>
             <input type="hidden" name="id" value="<?php echo esc_attr(aih_get_prop($art_piece, 'id', '')); ?>">
+            <input type="hidden" name="updated_at" id="aih-updated-at" value="<?php echo esc_attr(aih_get_prop($art_piece, 'updated_at', '')); ?>">
         <?php endif; ?>
         
         <div class="aih-form-grid">
