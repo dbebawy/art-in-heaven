@@ -679,8 +679,6 @@
                 setTheme(true);
             } else if (saved === 'light') {
                 setTheme(false);
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                setTheme(true);
             }
         }
 
@@ -693,15 +691,6 @@
             setTheme(newDark);
             localStorage.setItem(STORAGE_KEY, newDark ? 'dark' : 'light');
         });
-
-        // Listen for system preference changes (only if no manual override)
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                if (!localStorage.getItem(STORAGE_KEY)) {
-                    setTheme(e.matches);
-                }
-            });
-        }
 
         // Add transition class after initial paint to prevent FOUC
         setTimeout(function() {
