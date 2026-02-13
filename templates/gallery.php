@@ -206,6 +206,9 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                         <option value="favorites">Favorites Only</option>
                     </select>
                 </div>
+                <div class="aih-filter-section aih-filter-reset-section">
+                    <button type="button" class="aih-filter-reset" id="aih-filter-reset">Reset Filters</button>
+                </div>
             </div>
             </div>
         </div>
@@ -511,6 +514,17 @@ jQuery(document).ready(function($) {
     // Bind sort event
     $('#aih-sort').on('change', function() {
         sortCards();
+    });
+
+    // Reset filters
+    $('#aih-filter-reset').on('click', function() {
+        $('#aih-search').val('');
+        $('#aih-sort').val('default');
+        $('#aih-filter-artist').val('');
+        $('#aih-filter-medium').val('');
+        $('#aih-filter-favorites').val('');
+        sortCards();
+        filterCards();
     });
 
     // Run filter on page load
