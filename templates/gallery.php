@@ -459,7 +459,7 @@ jQuery(document).ready(function($) {
 
     // Sort gallery cards
     // Store original card order for reset
-    var $originalCards = $('#aih-gallery').children('.aih-card').clone(true);
+    var $originalCards = $('#aih-gallery').children('.aih-card').clone();
 
     function sortCards() {
         var sortBy = $('#aih-sort').val();
@@ -524,7 +524,7 @@ jQuery(document).ready(function($) {
         $('#aih-filter-favorites').val('');
         // Restore original card order
         var $grid = $('#aih-gallery');
-        $grid.empty().append($originalCards.clone(true));
+        $grid.empty().append($originalCards.clone());
         filterCards();
     });
 
@@ -532,7 +532,7 @@ jQuery(document).ready(function($) {
     filterCards();
 
     // Favorite toggle - only update UI after server confirmation
-    $('.aih-fav-btn').on('click', function(e) {
+    $('#aih-gallery').on('click', '.aih-fav-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
         var $btn = $(this);
@@ -556,7 +556,7 @@ jQuery(document).ready(function($) {
     });
 
     // Place bid
-    $('.aih-bid-btn').on('click', function() {
+    $('#aih-gallery').on('click', '.aih-bid-btn', function() {
         var $btn = $(this);
         var $card = $btn.closest('.aih-card');
         var $input = $card.find('.aih-bid-input');
@@ -595,7 +595,7 @@ jQuery(document).ready(function($) {
     });
 
     // Enter key to bid
-    $('.aih-bid-input').on('keypress', function(e) {
+    $('#aih-gallery').on('keypress', '.aih-bid-input', function(e) {
         if (e.which === 13) $(this).closest('.aih-card').find('.aih-bid-btn').click();
     });
 
