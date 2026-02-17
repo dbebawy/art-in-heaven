@@ -174,7 +174,6 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 <div class="aih-filter-section">
                     <label class="aih-filter-label">Sort By</label>
                     <select id="aih-sort" class="aih-select">
-                        <option value="default">Default</option>
                         <option value="title-asc">Title: A to Z</option>
                         <option value="title-desc">Title: Z to A</option>
                         <option value="artist-asc">Artist: A to Z</option>
@@ -206,10 +205,8 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                         <option value="favorites">Favorites Only</option>
                     </select>
                 </div>
-                <div class="aih-filter-section aih-filter-reset-section">
-                    <button type="button" class="aih-filter-reset" id="aih-filter-reset">Reset Filters</button>
-                </div>
             </div>
+            <button type="button" class="aih-filter-reset" id="aih-filter-reset">Reset Filters</button>
             </div>
         </div>
 
@@ -461,9 +458,11 @@ jQuery(document).ready(function($) {
     });
 
     // Sort gallery cards
+    // Store original card order for reset
+    var $originalCards = $('#aih-gallery').children('.aih-card').clone(true);
+
     function sortCards() {
         var sortBy = $('#aih-sort').val();
-        if (sortBy === 'default') return;
 
         var $grid = $('#aih-gallery');
         var $cards = $grid.children('.aih-card');
@@ -519,11 +518,13 @@ jQuery(document).ready(function($) {
     // Reset filters
     $('#aih-filter-reset').on('click', function() {
         $('#aih-search').val('');
-        $('#aih-sort').val('default');
+        $('#aih-sort').prop('selectedIndex', 0);
         $('#aih-filter-artist').val('');
         $('#aih-filter-medium').val('');
         $('#aih-filter-favorites').val('');
-        sortCards();
+        // Restore original card order
+        var $grid = $('#aih-gallery');
+        $grid.empty().append($originalCards.clone(true));
         filterCards();
     });
 

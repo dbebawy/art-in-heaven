@@ -621,6 +621,7 @@ body.filter-open {
 
 /* Reset Filters Button */
 .aih-filter-reset {
+    margin-top: 4px;
     padding: 6px 14px;
     font-family: var(--font-body);
     font-size: 10px;
@@ -633,7 +634,11 @@ body.filter-open {
     border-radius: var(--radius);
     cursor: pointer;
     transition: all var(--transition);
-    width: 100%;
+    width: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 8px;
 }
 
 .aih-filter-reset:hover {
