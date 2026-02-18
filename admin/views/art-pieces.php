@@ -104,17 +104,17 @@ $art_pieces = $art_model->get_all_with_stats($filter_args);
                 <option value="endtime-desc"><?php _e('Ending Last', 'art-in-heaven'); ?></option>
             </select>
             <div class="aih-bulk-actions">
-                <button type="button" class="button" id="aih-bulk-time-btn" disabled title="<?php esc_attr_e('Change End Times', 'art-in-heaven'); ?>">
-                    <span class="dashicons dashicons-clock"></span>
+                <button type="button" class="button" id="aih-bulk-start-btn" disabled>
+                    <?php _e('Set Start Time', 'art-in-heaven'); ?>
                 </button>
-                <button type="button" class="button" id="aih-bulk-start-btn" disabled title="<?php esc_attr_e('Set Event Start', 'art-in-heaven'); ?>">
-                    <span class="dashicons dashicons-calendar-alt"></span>
+                <button type="button" class="button" id="aih-bulk-time-btn" disabled>
+                    <?php _e('Set End Time', 'art-in-heaven'); ?>
                 </button>
-                <button type="button" class="button aih-btn-reveal" id="aih-bulk-show-end-btn" disabled title="<?php esc_attr_e('Reveal End Times', 'art-in-heaven'); ?>">
-                    <span class="dashicons dashicons-visibility"></span>
+                <button type="button" class="button aih-btn-reveal" id="aih-bulk-show-end-btn" disabled>
+                    <?php _e('Show Timer', 'art-in-heaven'); ?>
                 </button>
-                <button type="button" class="button" id="aih-bulk-hide-end-btn" disabled title="<?php esc_attr_e('Hide End Times', 'art-in-heaven'); ?>">
-                    <span class="dashicons dashicons-hidden"></span>
+                <button type="button" class="button" id="aih-bulk-hide-end-btn" disabled>
+                    <?php _e('Hide Timer', 'art-in-heaven'); ?>
                 </button>
             </div>
             <span class="aih-toolbar-counts"><span id="aih-selected-num">0</span> <?php _e('sel', 'art-in-heaven'); ?> / <span id="aih-visible-count"><?php echo count($art_pieces); ?></span> <?php _e('items', 'art-in-heaven'); ?></span>

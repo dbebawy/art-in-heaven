@@ -587,7 +587,8 @@ button.aih-action-btn .dashicons {
 
 .aih-filter-bar select {
     min-width: 120px;
-    padding: var(--aih-space-sm) var(--aih-space-lg) var(--aih-space-sm) var(--aih-space-sm);
+    padding: 0 var(--aih-space-lg) 0 var(--aih-space-sm);
+    height: 32px;
     border: 1px solid var(--aih-border);
     border-radius: var(--aih-radius-sm);
     font-size: var(--aih-font-base);
@@ -596,6 +597,14 @@ button.aih-action-btn .dashicons {
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
+}
+
+.aih-filter-bar .button {
+    min-height: 32px;
+    height: 32px;
+    line-height: 30px;
+    padding: 0 12px;
+    box-sizing: border-box;
 }
 
 .aih-filter-count {
