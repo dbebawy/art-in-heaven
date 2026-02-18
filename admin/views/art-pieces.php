@@ -53,7 +53,7 @@ $art_pieces = $art_model->get_all_with_stats($filter_args);
 <div class="wrap aih-admin-wrap">
     <h1 class="wp-heading-inline"><?php _e('Art Pieces', 'art-in-heaven'); ?></h1>
     <a href="<?php echo admin_url('admin.php?page=art-in-heaven-add'); ?>" class="page-title-action"><?php _e('Add New', 'art-in-heaven'); ?></a>
-    <a href="#" class="page-title-action" id="aih-import-csv-btn"><?php _e('Import Template', 'art-in-heaven'); ?></a>
+    <a href="#" class="page-title-action" id="aih-import-csv-btn"><?php _e('Import Art Pieces', 'art-in-heaven'); ?></a>
     <hr class="wp-header-end">
     
     <!-- Tabs -->
