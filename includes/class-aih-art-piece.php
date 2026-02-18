@@ -565,6 +565,29 @@ class AIH_Art_Piece {
 
         $wpdb->delete(AIH_Database::get_table('bids'), array('art_piece_id' => $id), array('%d'));
         $wpdb->delete(AIH_Database::get_table('favorites'), array('art_piece_id' => $id), array('%d'));
+
+        // Clean up order items and orphaned orders
+        $order_items_table = AIH_Database::get_table('order_items');
+        $orders_table = AIH_Database::get_table('orders');
+
+        // Get order IDs that reference this art piece
+        $order_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT order_id FROM $order_items_table WHERE art_piece_id = %d",
+            $id
+        ));
+
+        // Delete order items for this art piece
+        $wpdb->delete($order_items_table, array('art_piece_id' => $id), array('%d'));
+
+        // Delete any orders that now have no items left
+        if (!empty($order_ids)) {
+            $placeholders = implode(',', array_fill(0, count($order_ids), '%d'));
+            $wpdb->query($wpdb->prepare(
+                "DELETE FROM $orders_table WHERE id IN ($placeholders) AND id NOT IN (SELECT order_id FROM $order_items_table)",
+                $order_ids
+            ));
+        }
+
         $result = $wpdb->delete($this->table, array('id' => $id), array('%d'));
 
         // Invalidate counts cache so tabs update immediately
