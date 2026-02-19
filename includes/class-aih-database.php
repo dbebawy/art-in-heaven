@@ -576,7 +576,7 @@ class AIH_Database {
         ));
 
         // Case-insensitive compare - MySQL may lowercase table names on some OS
-        return strtolower($result) === strtolower($table);
+        return strtolower((string) $result) === strtolower($table);
     }
     
     /**
