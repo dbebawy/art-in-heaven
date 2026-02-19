@@ -1036,4 +1036,66 @@ jQuery(document).ready(function($) {
     background: #c62828;
     color: #fff;
 }
+
+/* Dark mode overrides */
+.dark-mode .aih-checkout-item-details h4,
+.dark-mode .aih-checkout-summary h3,
+.dark-mode .aih-summary-row,
+.dark-mode .aih-summary-total,
+.dark-mode .aih-order-header strong,
+.dark-mode .aih-order-details p,
+.dark-mode .aih-checkout-item-price strong,
+.dark-mode .aih-order-total-row,
+.dark-mode .aih-order-total-final,
+.dark-mode .aih-order-item-info h5,
+.dark-mode .aih-order-items-list h4,
+.dark-mode .aih-modal-header h3 {
+    color: var(--color-primary);
+}
+
+.dark-mode .aih-status-paid {
+    background: rgba(95, 168, 112, 0.15);
+    color: #5fa870;
+}
+
+.dark-mode .aih-status-pending {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
+}
+
+.dark-mode .aih-pickup-badge {
+    background: rgba(66, 165, 245, 0.15);
+    color: #64b5f6;
+}
+
+.dark-mode .aih-order-totals {
+    background: var(--color-bg-alt);
+}
+
+.dark-mode .aih-payment-success {
+    background: rgba(95, 168, 112, 0.15);
+    border-color: rgba(95, 168, 112, 0.3);
+    color: #81c784;
+}
+
+.dark-mode .aih-payment-cancelled {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.3);
+    color: #ffb74d;
+}
+
+.dark-mode .aih-payment-error {
+    background: rgba(216, 108, 111, 0.15);
+    border-color: rgba(216, 108, 111, 0.3);
+    color: #ef9a9a;
+}
+
+.dark-mode .aih-order-item-price {
+    color: var(--color-primary);
+}
+
+.dark-mode .aih-checkout-item-image .aih-art-id-badge {
+    background: rgba(30, 30, 30, 0.9);
+    color: var(--color-accent);
+}
 </style>
