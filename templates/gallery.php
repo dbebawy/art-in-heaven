@@ -98,9 +98,11 @@ sort($artists);
 sort($mediums);
 
 $cart_count = 0;
+$payment_statuses = array();
 if ($is_logged_in) {
     $checkout = AIH_Checkout::get_instance();
     $cart_count = count($checkout->get_won_items($bidder_id));
+    $payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
 }
 
 $bid_increment = floatval(get_option('aih_bid_increment', 1));
@@ -250,7 +252,12 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 $status_class = '';
                 $status_text = '';
 
-                if ($is_ended && $is_winning) {
+                $is_paid = isset($payment_statuses[$piece->id]) && $payment_statuses[$piece->id] === 'paid';
+
+                if ($is_ended && $is_winning && $is_paid) {
+                    $status_class = 'paid';
+                    $status_text = 'Paid';
+                } elseif ($is_ended && $is_winning) {
                     $status_class = 'won';
                     $status_text = 'Won';
                 } elseif ($is_ended) {

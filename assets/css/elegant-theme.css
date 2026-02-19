@@ -959,6 +959,11 @@ body.filter-open {
     color: white;
 }
 
+.aih-badge-paid {
+    background: #1565c0;
+    color: white;
+}
+
 .aih-badge-ended {
     background: var(--color-secondary);
     color: white;

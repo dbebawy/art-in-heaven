@@ -80,6 +80,7 @@ $cart_count = 0;
 $checkout = AIH_Checkout::get_instance();
 $cart_count = count($checkout->get_won_items($bidder_id));
 $my_orders = $checkout->get_bidder_orders($bidder_id);
+$payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
 ?>
 
 <div class="aih-page aih-mybids-page">
@@ -134,8 +135,24 @@ $my_orders = $checkout->get_bidder_orders($bidder_id);
                 $highest_bid = $bid_model->get_highest_bid_amount($bid->art_piece_id);
                 $min_bid = $highest_bid + $bid_increment;
 
-                $status_class = $is_ended ? ($is_winning ? 'won' : 'ended') : ($is_winning ? 'winning' : 'outbid');
-                $status_text = $is_ended ? ($is_winning ? 'Won' : 'Ended') : ($is_winning ? 'Winning' : 'Outbid');
+                $is_paid = isset($payment_statuses[$bid->art_piece_id]) && $payment_statuses[$bid->art_piece_id] === 'paid';
+
+                if ($is_ended && $is_winning && $is_paid) {
+                    $status_class = 'paid';
+                    $status_text = 'Paid';
+                } elseif ($is_ended && $is_winning) {
+                    $status_class = 'won';
+                    $status_text = 'Won';
+                } elseif ($is_ended) {
+                    $status_class = 'ended';
+                    $status_text = 'Ended';
+                } elseif ($is_winning) {
+                    $status_class = 'winning';
+                    $status_text = 'Winning';
+                } else {
+                    $status_class = 'outbid';
+                    $status_text = 'Outbid';
+                }
             ?>
             <article class="aih-card <?php echo $status_class; ?>" data-id="<?php echo intval($bid->art_piece_id); ?>">
                 <div class="aih-card-image">

@@ -54,6 +54,35 @@ class AIH_Checkout {
         ));
     }
     
+    /**
+     * Get payment status for all art pieces a bidder has won (keyed by art_piece_id)
+     */
+    public function get_bidder_payment_statuses($bidder_id) {
+        global $wpdb;
+
+        $bids_table = AIH_Database::get_table('bids');
+        $order_items_table = AIH_Database::get_table('order_items');
+        $orders_table = AIH_Database::get_table('orders');
+
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT b.art_piece_id, o.payment_status
+             FROM $bids_table b
+             JOIN $order_items_table oi ON oi.art_piece_id = b.art_piece_id
+             JOIN $orders_table o ON oi.order_id = o.id
+             WHERE b.bidder_id = %s AND b.is_winning = 1
+             ORDER BY o.id DESC",
+            $bidder_id
+        ));
+
+        $map = array();
+        foreach ($results as $row) {
+            if (!isset($map[$row->art_piece_id])) {
+                $map[$row->art_piece_id] = $row->payment_status;
+            }
+        }
+        return $map;
+    }
+
     public function calculate_totals($items) {
         $subtotal = 0;
         foreach ($items as $item) {
