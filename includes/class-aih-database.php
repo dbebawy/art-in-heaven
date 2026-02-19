@@ -92,7 +92,7 @@ class AIH_Database {
             art_piece_id bigint(20) unsigned NOT NULL,
             bidder_id varchar(255) NOT NULL,
             bid_amount decimal(10,2) NOT NULL,
-            bid_time datetime DEFAULT CURRENT_TIMESTAMP,
+            bid_time datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
             is_winning tinyint(1) DEFAULT 0,
             bid_status varchar(20) DEFAULT 'valid',
             ip_address varchar(45) DEFAULT '',

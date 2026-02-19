@@ -33,7 +33,9 @@ class AIH_Bid {
         
         $art_table = AIH_Database::get_table('art_pieces');
         $now = current_time('mysql');
-        
+        $ms = substr(sprintf('%03d', (microtime(true) * 1000) % 1000), 0, 3);
+        $bid_time = $now . '.' . $ms;
+
         // Start transaction to prevent race conditions
         $wpdb->query('START TRANSACTION');
         
@@ -83,7 +85,7 @@ class AIH_Bid {
             $current_highest = floatval($art_piece->current_highest);
             $ip_address = !empty($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
             $bid_amount = floatval($amount);
-            $min_increment = floatval(get_option('aih_min_bid_increment', 5));
+            $min_increment = floatval(get_option('aih_bid_increment', 1));
 
             // Check if bid is too low (must meet minimum increment above current highest)
             if ($current_highest > 0) {
@@ -99,7 +101,7 @@ class AIH_Bid {
                     'art_piece_id' => $art_piece_id,
                     'bidder_id' => $bidder_id,
                     'bid_amount' => $bid_amount,
-                    'bid_time' => $now,
+                    'bid_time' => $bid_time,
                     'is_winning' => $is_too_low ? 0 : 1,
                     'bid_status' => $is_too_low ? 'too_low' : 'valid',
                     'ip_address' => $ip_address,
@@ -208,7 +210,7 @@ class AIH_Bid {
         
         return $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$this->table}
-             WHERE art_piece_id = %d AND bidder_id = %s
+             WHERE art_piece_id = %d AND bidder_id = %s AND bid_status = 'valid'
              ORDER BY bid_time DESC",
             $art_piece_id,
             $bidder_id

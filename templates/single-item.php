@@ -85,7 +85,7 @@ $display_bid = $has_bids ? $current_bid : $art_piece->starting_bid;
 $min_bid = $has_bids ? $current_bid + $bid_increment : $art_piece->starting_bid;
 
 // Get bidder's successful bid history for this piece
-$my_bid_history = $bidder_id ? $bid_model->get_bidder_bids_for_art_piece($art_piece->id, $bidder_id, true) : array();
+$my_bid_history = $bidder_id ? $bid_model->get_bidder_bids_for_art_piece($art_piece->id, $bidder_id) : array();
 
 // Proper status calculation - check computed_status first, then calculate from dates
 $computed_status = isset($art_piece->computed_status) ? $art_piece->computed_status : null;
@@ -262,8 +262,8 @@ $cart_count = count($checkout->get_won_items($bidder_id));
                         <?php endif; ?>
 
                         <div class="aih-bid-info">
-                            <span class="aih-bid-label"><?php echo $has_bids ? 'Current Bid' : 'Starting Bid'; ?></span>
-                            <span class="aih-bid-amount">$<?php echo number_format($display_bid); ?></span>
+                            <span class="aih-bid-label">Starting Bid</span>
+                            <span class="aih-bid-amount">$<?php echo number_format($art_piece->starting_bid); ?></span>
                         </div>
 
                         <div class="aih-bid-form-single">
@@ -514,12 +514,10 @@ jQuery(document).ready(function($) {
                 $('.aih-single-image').find('.aih-badge').remove();
                 $('.aih-single-image').prepend('<span class="aih-badge aih-badge-winning aih-badge-single">Winning</span>');
                 $('#bid-amount').val('');
-                // Update bid display and minimum
+                // Update minimum bid
                 var increment = <?php echo intval($bid_increment); ?>;
                 var newMin = amount + increment;
                 $('#bid-amount').data('min', newMin).attr('data-min', newMin);
-                $('.aih-bid-label').text('Current Bid');
-                $('.aih-bid-amount').text('$' + amount.toLocaleString());
             } else {
                 $msg.removeClass('success').addClass('error').text(r.data.message || 'Failed').show();
             }
