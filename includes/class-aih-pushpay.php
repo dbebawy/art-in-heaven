@@ -809,7 +809,12 @@ class AIH_Pushpay_API {
      * Reschedule auto sync with new interval
      */
     public static function reschedule_auto_sync($interval) {
-        if (get_option('aih_pushpay_auto_sync_enabled', false)) {
+        // Check both saved option and current POST (option may not be saved yet during settings save)
+        $enabled = get_option('aih_pushpay_auto_sync_enabled', false);
+        if (!$enabled && isset($_POST['aih_pushpay_auto_sync_enabled'])) {
+            $enabled = (bool) $_POST['aih_pushpay_auto_sync_enabled'];
+        }
+        if ($enabled) {
             self::schedule_auto_sync($interval);
         }
     }

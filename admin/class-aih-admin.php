@@ -364,8 +364,10 @@ class AIH_Admin {
             'default' => false,
             'sanitize_callback' => function($value) {
                 $enabled = (bool) $value;
+                // Schedule or unschedule based on setting
                 if ($enabled) {
-                    AIH_Pushpay_API::schedule_auto_sync();
+                    $interval = isset($_POST['aih_pushpay_auto_sync_interval']) ? sanitize_text_field($_POST['aih_pushpay_auto_sync_interval']) : get_option('aih_pushpay_auto_sync_interval', 'hourly');
+                    AIH_Pushpay_API::schedule_auto_sync($interval);
                 } else {
                     AIH_Pushpay_API::unschedule_auto_sync();
                 }
