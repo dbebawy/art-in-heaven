@@ -954,6 +954,11 @@ body.filter-open {
     color: white;
 }
 
+.aih-badge-won {
+    background: var(--color-success);
+    color: white;
+}
+
 .aih-badge-ended {
     background: var(--color-secondary);
     color: white;

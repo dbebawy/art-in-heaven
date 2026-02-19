@@ -250,7 +250,10 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 $status_class = '';
                 $status_text = '';
 
-                if ($is_ended) {
+                if ($is_ended && $is_winning) {
+                    $status_class = 'won';
+                    $status_text = 'Won';
+                } elseif ($is_ended) {
                     $status_class = 'ended';
                     $status_text = 'Ended';
                 } elseif ($is_upcoming) {
