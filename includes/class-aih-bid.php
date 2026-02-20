@@ -85,7 +85,18 @@ class AIH_Bid {
             $current_highest = floatval($art_piece->current_highest);
             $ip_address = !empty($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
             $bid_amount = floatval($amount);
+            $max_bid = 50000;
             $min_increment = floatval(get_option('aih_bid_increment', 1));
+
+            // Check if bid exceeds maximum allowed
+            if ($bid_amount > $max_bid) {
+                $wpdb->query('ROLLBACK');
+                return array(
+                    'success' => false,
+                    'message' => sprintf(__('Bids cannot exceed $%s.', 'art-in-heaven'), number_format($max_bid)),
+                    'bid_too_high' => true,
+                );
+            }
 
             // Check if bid is too low (must meet minimum increment above current highest)
             if ($current_highest > 0) {

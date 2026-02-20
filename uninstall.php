@@ -44,6 +44,7 @@ $table_suffixes = array(
     '_Orders',
     '_OrderItems',
     '_PushpayTransactions',
+    '_PushSubscriptions',
     '_AuditLog'
 );
 
@@ -116,6 +117,10 @@ $options_to_delete = array(
     'aih_pushpay_redirect_key',
     'aih_pushpay_last_sync',
     'aih_pushpay_last_sync_count',
+    // VAPID keys
+    'aih_vapid_public_key',
+    'aih_vapid_private_key',
+    'aih_vapid_subject',
     // Login/page settings
     'aih_login_page',
     'aih_my_bids_page',

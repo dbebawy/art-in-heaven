@@ -109,6 +109,14 @@ class AIH_Ajax {
         // Log Viewer
         add_action('wp_ajax_aih_admin_get_logs',   array($this, 'admin_get_logs'));
         add_action('wp_ajax_aih_admin_clear_logs', array($this, 'admin_clear_logs'));
+
+        // Push notifications
+        add_action('wp_ajax_aih_push_subscribe', array($this, 'push_subscribe'));
+        add_action('wp_ajax_nopriv_aih_push_subscribe', array($this, 'push_subscribe'));
+        add_action('wp_ajax_aih_push_unsubscribe', array($this, 'push_unsubscribe'));
+        add_action('wp_ajax_nopriv_aih_push_unsubscribe', array($this, 'push_unsubscribe'));
+        add_action('wp_ajax_aih_check_outbid', array($this, 'check_outbid'));
+        add_action('wp_ajax_nopriv_aih_check_outbid', array($this, 'check_outbid'));
     }
     
     // ========== AUTH ==========
@@ -2234,5 +2242,67 @@ class AIH_Ajax {
         }
 
         wp_send_json_success(array('message' => __('Log file cleared.', 'art-in-heaven')));
+    }
+
+    // ========== PUSH NOTIFICATIONS ==========
+
+    /**
+     * Save a push subscription for the current bidder
+     */
+    public function push_subscribe() {
+        check_ajax_referer('aih_nonce', 'nonce');
+
+        $auth = AIH_Auth::get_instance();
+        if (!$auth->is_logged_in()) {
+            wp_send_json_error(array('message' => 'Not authenticated'));
+        }
+
+        $bidder_id = $auth->get_current_bidder_id();
+        $endpoint  = isset($_POST['endpoint']) ? esc_url_raw($_POST['endpoint']) : '';
+        $p256dh    = isset($_POST['p256dh']) ? sanitize_text_field($_POST['p256dh']) : '';
+        $auth_key  = isset($_POST['auth']) ? sanitize_text_field($_POST['auth']) : '';
+
+        if (empty($endpoint) || empty($p256dh) || empty($auth_key)) {
+            wp_send_json_error(array('message' => 'Missing subscription data'));
+        }
+
+        $result = AIH_Push::save_subscription($bidder_id, $endpoint, $p256dh, $auth_key);
+        if ($result) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error(array('message' => 'Failed to save subscription'));
+        }
+    }
+
+    /**
+     * Remove a push subscription by endpoint
+     */
+    public function push_unsubscribe() {
+        check_ajax_referer('aih_nonce', 'nonce');
+
+        $endpoint = isset($_POST['endpoint']) ? esc_url_raw($_POST['endpoint']) : '';
+        if (empty($endpoint)) {
+            wp_send_json_error(array('message' => 'Missing endpoint'));
+        }
+
+        AIH_Push::delete_subscription($endpoint);
+        wp_send_json_success();
+    }
+
+    /**
+     * Return and clear pending outbid events for the current bidder (polling fallback)
+     */
+    public function check_outbid() {
+        check_ajax_referer('aih_nonce', 'nonce');
+
+        $auth = AIH_Auth::get_instance();
+        if (!$auth->is_logged_in()) {
+            wp_send_json_error(array('message' => 'Not authenticated'));
+        }
+
+        $bidder_id = $auth->get_current_bidder_id();
+        $events    = AIH_Push::consume_outbid_events($bidder_id);
+
+        wp_send_json_success($events);
     }
 }

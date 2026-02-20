@@ -106,6 +106,10 @@ class Art_In_Heaven {
         require_once AIH_PLUGIN_DIR . 'includes/class-aih-shortcodes.php';
         require_once AIH_PLUGIN_DIR . 'includes/class-aih-cron-scheduler.php';
 
+        // Composer autoloader (web-push library)
+        require_once AIH_PLUGIN_DIR . 'vendor/autoload.php';
+        require_once AIH_PLUGIN_DIR . 'includes/class-aih-push.php';
+
         // Defer loading of classes only needed in specific contexts
         // REST API class loaded on rest_api_init (see init_rest_api())
         // Export class loaded on demand (referenced by class name in callbacks)
@@ -147,7 +151,13 @@ class Art_In_Heaven {
         add_action('aih_art_created', array($this, 'invalidate_art_cache'));
         add_action('aih_art_updated', array($this, 'invalidate_art_cache'));
         add_action('aih_bid_placed', array($this, 'invalidate_bid_cache'));
-        
+
+        // Push notifications for outbid alerts
+        add_action('aih_bid_placed', array(AIH_Push::get_instance(), 'notify_outbid'), 10, 4);
+
+        // Serve service worker from site root scope
+        add_action('template_redirect', array($this, 'serve_service_worker'));
+
         // Disable intermediate image sizes for AIH uploads
         add_filter('intermediate_image_sizes_advanced', array($this, 'disable_intermediate_sizes'), 10, 2);
     }
@@ -323,7 +333,28 @@ class Art_In_Heaven {
             $rest_api->register_routes();
         }
     }
-    
+
+    /**
+     * Serve the push notification service worker from site root scope.
+     * Intercepted via /?aih-sw=1 so the SW gets "/" scope.
+     */
+    public function serve_service_worker() {
+        if (!isset($_GET['aih-sw']) || $_GET['aih-sw'] !== '1') {
+            return;
+        }
+
+        $sw_file = AIH_PLUGIN_DIR . 'assets/js/aih-sw.js';
+        if (!file_exists($sw_file)) {
+            return;
+        }
+
+        header('Content-Type: application/javascript');
+        header('Service-Worker-Allowed: /');
+        header('Cache-Control: no-cache');
+        readfile($sw_file);
+        exit;
+    }
+
     private function throttled_expired_check() {
         // Run status check every 30 seconds max
         $last_check = get_transient('aih_last_expired_check');
@@ -412,6 +443,7 @@ class Art_In_Heaven {
         wp_enqueue_style('aih-elegant-theme', AIH_PLUGIN_URL . 'assets/css/elegant-theme.css', array('aih-google-fonts'), AIH_VERSION);
 
         wp_enqueue_script('aih-frontend', AIH_PLUGIN_URL . 'assets/js/aih-frontend.js', array('jquery'), AIH_VERSION, true);
+        wp_enqueue_script('aih-push', AIH_PLUGIN_URL . 'assets/js/aih-push.js', array('jquery', 'aih-frontend'), AIH_VERSION, true);
 
         // Add custom color CSS
         $custom_css = $this->get_custom_color_css();
@@ -420,14 +452,17 @@ class Art_In_Heaven {
         }
         
         $auth = AIH_Auth::get_instance();
+        $vapid = AIH_Push::get_vapid_keys();
         wp_localize_script('aih-frontend', 'aihAjax', array(
-            'ajaxurl'   => admin_url('admin-ajax.php'),
-            'resturl'   => rest_url('art-in-heaven/v1/'),
-            'nonce'     => wp_create_nonce('aih_nonce'),
-            'restNonce' => wp_create_nonce('wp_rest'),
-            'isLoggedIn' => $auth->is_logged_in(),
-            'bidderId'  => $auth->get_current_bidder_id(),
-            'strings'   => array(
+            'ajaxurl'        => admin_url('admin-ajax.php'),
+            'resturl'        => rest_url('art-in-heaven/v1/'),
+            'nonce'          => wp_create_nonce('aih_nonce'),
+            'restNonce'      => wp_create_nonce('wp_rest'),
+            'isLoggedIn'     => $auth->is_logged_in(),
+            'bidderId'       => $auth->get_current_bidder_id(),
+            'vapidPublicKey' => $vapid['publicKey'],
+            'swUrl'          => home_url('/?aih-sw=1'),
+            'strings'        => array(
                 'bidTooLow'      => __('Your Bid is too Low.', 'art-in-heaven'),
                 'bidSuccess'     => __('Bid placed successfully!', 'art-in-heaven'),
                 'bidError'       => __('Error placing bid.', 'art-in-heaven'),

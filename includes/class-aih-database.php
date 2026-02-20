@@ -290,6 +290,19 @@ class AIH_Database {
             KEY payment_date (payment_date)
         ) $charset_collate;";
         
+        // Push Subscriptions table - {Year}_PushSubscriptions
+        $push_subs_table = $wpdb->prefix . $year . '_PushSubscriptions';
+        $sql_push_subs = "CREATE TABLE $push_subs_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            bidder_id varchar(255) NOT NULL,
+            endpoint text NOT NULL,
+            p256dh varchar(255) NOT NULL,
+            auth_key varchar(255) NOT NULL,
+            created_at datetime DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY bidder_id (bidder_id)
+        ) $charset_collate;";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
         $all_sql = array(
@@ -303,6 +316,7 @@ class AIH_Database {
             'audit' => $sql_audit,
             'art_images' => $sql_art_images,
             'pushpay' => $sql_pushpay,
+            'push_subs' => $sql_push_subs,
         );
 
         foreach ($all_sql as $key => $sql) {
@@ -546,7 +560,8 @@ class AIH_Database {
             'order_items' => $year . '_OrderItems',
             'audit_log' => $year . '_AuditLog',
             'art_images' => $year . '_ArtImages',
-            'pushpay_transactions' => $year . '_PushpayTransactions'
+            'pushpay_transactions' => $year . '_PushpayTransactions',
+            'push_subscriptions' => $year . '_PushSubscriptions'
         );
         
         if (isset($table_map[$table])) {

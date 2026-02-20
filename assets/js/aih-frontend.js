@@ -255,12 +255,19 @@
     function submitBid(artId, bidAmount, noticeSelector) {
         var $notice = $(noticeSelector);
         $notice.removeClass('error success').hide();
-        
+
         if (!bidAmount || parseFloat(bidAmount) <= 0) {
             $notice.addClass('error').text('Please enter a valid bid amount.').show();
             return;
         }
-        
+
+        // Confirm bid amount to prevent fat-finger mistakes
+        var numericBid = parseFloat(bidAmount);
+        var formatted = '$' + numericBid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (!confirm('Please confirm your bid of ' + formatted)) {
+            return;
+        }
+
         $.ajax({
             url: aihAjax.ajaxurl,
             type: 'POST',
@@ -287,7 +294,12 @@
                     
                     // Update card if visible
                     updateCardWinningStatus(artId, true);
-                    
+
+                    // Prompt for push notification permission after first bid
+                    if (window.AIHPush && !window.AIHPush.pushSubscribed) {
+                        setTimeout(function() { window.AIHPush.requestPermission(); }, 2000);
+                    }
+
                 } else {
                     var message = response.data.message || aihAjax.strings.bidError;
                     
@@ -666,5 +678,8 @@
             $page.addClass('dark-mode-transition');
         }, 100);
     })();
+
+    // Expose showToast for push notification fallback
+    window.showToast = showToast;
 
 })(jQuery);
