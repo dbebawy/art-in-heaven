@@ -146,9 +146,10 @@
     word-wrap: break-word;
 }
 
-/* Reset gallery wrapper that sits between WordPress containers and .aih-page */
+/* Reset wrappers that sit between WordPress containers and .aih-page */
 #aih-gallery-wrapper,
-#aih-single-wrapper {
+#aih-single-wrapper,
+#aih-mybids-wrapper {
     background: transparent;
     padding-left: 0;
     padding-right: 0;
@@ -185,8 +186,13 @@ body.aih-active .page-title {
 /* Fallback: :has() selectors for themes/setups where body class isn't available */
 .site-content:has(.aih-page),
 .content-area:has(.aih-page),
+.site-main:has(.aih-page),
 .entry-content:has(.aih-page),
-.wp-block-post-content:has(.aih-page) {
+.wp-block-post-content:has(.aih-page),
+.page-content:has(.aih-page),
+.is-layout-constrained:has(.aih-page),
+.is-layout-flow:has(.aih-page),
+.has-global-padding:has(.aih-page) {
     background: transparent !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -197,7 +203,10 @@ body.aih-active .page-title {
 
 .entry-title:has(+ .aih-page),
 .entry-title:has(+ #aih-gallery-wrapper),
-.wp-block-post-title:has(~ .aih-page) {
+.entry-title:has(+ script + .aih-page),
+.wp-block-post-title:has(~ .aih-page),
+.wp-block-post-title:has(~ #aih-gallery-wrapper),
+.page-title:has(~ .aih-page) {
     display: none !important;
 }
 

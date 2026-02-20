@@ -433,18 +433,16 @@ class Art_In_Heaven {
      */
     public function add_body_class($classes) {
         global $post;
-        if (!$post) return $classes;
+        if (!$post || empty($post->post_content)) return $classes;
 
-        $plugin_pages = array(
-            get_option('aih_gallery_page'),
-            get_option('aih_my_bids_page'),
-            get_option('aih_checkout_page'),
-            get_option('aih_login_page'),
-            get_option('aih_winners_page'),
-            get_option('aih_my_wins_page'),
-        );
-
-        if (in_array($post->ID, array_filter($plugin_pages))) {
+        if (has_shortcode($post->post_content, 'art_in_heaven_gallery')
+            || has_shortcode($post->post_content, 'art_in_heaven_item')
+            || has_shortcode($post->post_content, 'art_in_heaven_my_bids')
+            || has_shortcode($post->post_content, 'art_in_heaven_checkout')
+            || has_shortcode($post->post_content, 'art_in_heaven_login')
+            || has_shortcode($post->post_content, 'art_in_heaven_winners')
+            || has_shortcode($post->post_content, 'art_in_heaven_my_wins')
+        ) {
             $classes[] = 'aih-active';
         }
 
