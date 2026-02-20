@@ -58,13 +58,6 @@
    Supports: iPhone 14-17, Samsung S20-S25, Pixel 7-10
    ============================================ */
 
-/* Ensure smooth scrolling on iOS */
-@supports (-webkit-overflow-scrolling: touch) {
-    html {
-        -webkit-overflow-scrolling: touch;
-    }
-}
-
 /* Touch action for better mobile interaction - scoped to plugin containers */
 .aih-page *,
 .aih-page *::before,
@@ -85,11 +78,6 @@
 
 /* Text selection styling */
 ::selection {
-    background: rgba(184, 149, 107, 0.3);
-    color: var(--color-primary);
-}
-
-::-moz-selection {
     background: rgba(184, 149, 107, 0.3);
     color: var(--color-primary);
 }
@@ -135,61 +123,7 @@
     backface-visibility: hidden;
 }
 
-/* Background for plugin pages only - scoped to avoid overriding theme */
-.aih-page {
-    background: var(--color-bg);
-}
-
-/* Reset plugin container itself */
-.aih-page {
-    background: transparent;
-    padding-left: 0;
-    padding-right: 0;
-    margin: 0;
-    max-width: 100%;
-    width: 100%;
-}
-
-/* Reset gallery wrapper that sits between WordPress containers and .aih-page */
-#aih-gallery-wrapper,
-#aih-single-wrapper {
-    background: transparent;
-    padding-left: 0;
-    padding-right: 0;
-    margin: 0;
-    max-width: 100%;
-    width: 100%;
-}
-
-/* Reset WordPress/theme ancestor containers that wrap our auction content */
-.site-content:has(.aih-page),
-.content-area:has(.aih-page),
-.site-main:has(.aih-page),
-.entry-content:has(.aih-page),
-.wp-block-post-content:has(.aih-page),
-.page-content:has(.aih-page),
-.is-layout-constrained:has(.aih-page),
-.is-layout-flow:has(.aih-page),
-.has-global-padding:has(.aih-page) {
-    background: transparent !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-}
-
-/* Hide WordPress page title when plugin page is present */
-.entry-title:has(+ .aih-page),
-.entry-title:has(+ #aih-gallery-wrapper),
-.entry-title:has(+ script + .aih-page),
-.wp-block-post-title:has(~ .aih-page),
-.wp-block-post-title:has(~ #aih-gallery-wrapper),
-.page-title:has(~ .aih-page) {
-    display: none !important;
-}
-
-/* Remove any theme padding/margins around our content */
+/* Plugin page container — single merged rule */
 .aih-page {
     min-height: 100vh;
     display: flex;
@@ -203,10 +137,68 @@
     flex: 1 1 auto;
     width: 100%;
     max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    margin: 0;
     position: relative;
     overflow-x: hidden;
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+/* Reset gallery wrapper that sits between WordPress containers and .aih-page */
+#aih-gallery-wrapper,
+#aih-single-wrapper {
+    background: transparent;
+    padding-left: 0;
+    padding-right: 0;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* Reset WordPress/theme ancestor containers — body class set via PHP */
+body.aih-active .site-content,
+body.aih-active .content-area,
+body.aih-active .site-main,
+body.aih-active .entry-content,
+body.aih-active .wp-block-post-content,
+body.aih-active .page-content,
+body.aih-active .is-layout-constrained,
+body.aih-active .is-layout-flow,
+body.aih-active .has-global-padding {
+    background: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Hide WordPress page title */
+body.aih-active .entry-title,
+body.aih-active .wp-block-post-title,
+body.aih-active .page-title {
+    display: none !important;
+}
+
+/* Fallback: :has() selectors for themes/setups where body class isn't available */
+.site-content:has(.aih-page),
+.content-area:has(.aih-page),
+.entry-content:has(.aih-page),
+.wp-block-post-content:has(.aih-page) {
+    background: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.entry-title:has(+ .aih-page),
+.entry-title:has(+ #aih-gallery-wrapper),
+.wp-block-post-title:has(~ .aih-page) {
+    display: none !important;
 }
 
 /* ============================================
@@ -1935,32 +1927,6 @@ body.filter-open {
 }
 
 /* ============================================
-   SINGLE VIEW NAVIGATION FIX FOR MOBILE
-   ============================================ */
-.aih-single-nav {
-    flex-wrap: wrap;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 12px;
-}
-
-.aih-single-nav button {
-    padding: 8px 14px;
-    font-size: 13px;
-    min-width: 80px;
-    width: 100%;
-}
-
-.aih-single-counter {
-    order: -1;
-    text-align: center;
-    width: 100%;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: 4px;
-}
-
 /* ============================================
    CHECKOUT PAGE - FULL WIDTH LAYOUT
    ============================================ */
@@ -2099,8 +2065,6 @@ body.filter-open {
 /* Prevent text size adjustment on orientation change (iOS) */
 html {
     -webkit-text-size-adjust: 100%;
-    -moz-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
 
@@ -2157,29 +2121,6 @@ body {
 
     .aih-gallery-grid {
         gap: 14px;
-    }
-}
-
-/* ============================================
-   PHABLET (480px+)
-   ============================================ */
-@media (min-width: 480px) {
-    .aih-single-nav {
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .aih-single-nav button {
-        width: auto;
-    }
-
-    .aih-single-counter {
-        order: 0;
-        text-align: left;
-        width: auto;
-        padding-bottom: 0;
-        border-bottom: none;
-        margin-bottom: 0;
     }
 }
 
@@ -2470,9 +2411,6 @@ body {
     
     .aih-logo {
         font-size: 24px;
-    }
-    
-    .aih-logo {
         flex: 1;
     }
 
@@ -3119,5 +3057,2365 @@ html:has(.aih-page.dark-mode) body {
     color: var(--color-muted);
     font-weight: 400;
     margin-left: 4px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Inline button variant (used in empty states) */
+.aih-btn--inline {
+    display: inline-block;
+    width: auto;
+    margin-top: 24px;
+}
+
+/* Gallery card upcoming notice (compact variant) */
+.aih-upcoming-notice--card {
+    padding: 8px;
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 0.85em;
+}
+
+/* Section headings in checkout/orders */
+.aih-section-heading {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+
+/* ==========================================================================
+   SINGLE ITEM PAGE
+   ========================================================================== */
+
+/* Single Item Page Overrides */
+.aih-single-nav-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-back-link {
+    width: 100%;
+    text-align: center;
+    order: 2;
+    font-size: 13px;
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.aih-back-link:hover {
+    text-decoration: underline;
+}
+
+.aih-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    order: 1;
+}
+
+.aih-nav-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all var(--transition);
+    background: var(--color-surface);
+}
+
+.aih-nav-arrow:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.aih-nav-arrow.disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+}
+
+.aih-piece-counter {
+    font-size: 14px;
+    color: var(--color-muted);
+    min-width: 50px;
+    text-align: center;
+}
+
+.aih-nav-spacer {
+    display: none;
+}
+
+/* Content wrapper with navigation arrows at edges */
+.aih-single-content-wrapper {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.aih-single-content-wrapper > .aih-nav-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 16px;
+    transition: all var(--transition);
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.aih-single-content-wrapper > .aih-nav-arrow:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+}
+
+.aih-single-content-wrapper > .aih-nav-prev {
+    left: 4px;
+}
+
+.aih-single-content-wrapper > .aih-nav-next {
+    right: 4px;
+}
+
+.aih-single-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    align-items: start;
+    flex: 1;
+    min-width: 0;
+}
+
+.aih-single-image {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.aih-single-image > img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 55vh;
+    display: block;
+    object-fit: contain;
+    cursor: zoom-in;
+    object-position: center;
+}
+
+.aih-single-image .aih-fav-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+/* Art ID Badge on single image - like gallery cards */
+.aih-art-id-badge-single {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    padding: 6px 10px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-accent);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    line-height: 1;
+    z-index: 4;
+}
+
+/* Status Badge on single image - top left corner */
+.aih-badge-single {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 4;
+}
+
+.aih-thumbnails {
+    display: none;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.aih-thumb {
+    width: 60px;
+    height: 60px;
+    border: 2px solid var(--color-border);
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+    transition: border-color var(--transition);
+}
+
+.aih-thumb.active,
+.aih-thumb:hover {
+    border-color: var(--color-accent);
+}
+
+.aih-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Details section - prevent text overlay */
+.aih-single-details {
+    padding: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.aih-single-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+/* Hide art ID from meta since it's now on the image */
+.aih-single-meta .aih-art-id {
+    display: none;
+}
+
+.aih-single-details h1 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.aih-artist {
+    font-size: clamp(14px, 3.5vw, 16px);
+    color: var(--color-muted);
+    margin-bottom: 24px;
+}
+
+.aih-piece-info {
+    padding: 16px;
+    padding-bottom: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin-bottom: 20px;
+}
+
+.aih-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-info-row:last-child {
+    border-bottom: none;
+}
+
+.aih-info-label {
+    font-size: clamp(10px, 2.5vw, 12px);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-info-row span:last-child {
+    font-size: clamp(13px, 3vw, 15px);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.aih-description-row {
+    flex-direction: column;
+    align-items: flex-start;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.aih-description-row .aih-info-label {
+    margin-bottom: 4px;
+}
+
+.aih-description-text {
+    color: var(--color-secondary);
+    line-height: 1.6;
+    font-size: clamp(13px, 3vw, 14px);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    width: 100%;
+}
+
+.aih-description-text p {
+    margin: 0;
+}
+
+.aih-description-text p + p {
+    margin-top: 10px;
+}
+
+.aih-bid-section {
+    background: var(--color-bg);
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    margin-bottom: 20px;
+}
+
+.aih-bid-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-bid-info .aih-bid-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-bid-info .aih-bid-amount {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.aih-current-bid {
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.aih-current-bid .aih-bid-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: clamp(10px, 2.5vw, 12px);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-current-bid .aih-bid-amount {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Hidden bid when bid is placed */
+.aih-bid-hidden {
+    display: none !important;
+}
+
+/* Bid form - horizontal compact layout */
+.aih-bid-form-single {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.aih-bid-form-single .aih-field {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.aih-bid-form-single .aih-field label {
+    font-size: 10px;
+    margin-bottom: 4px;
+}
+
+.aih-bid-form-single input {
+    width: 100%;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.aih-bid-form-single .aih-bid-btn {
+    flex-shrink: 0;
+    width: 60px;
+    height: 44px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* Bid History Section */
+.aih-bid-history {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 20px;
+}
+
+.aih-bid-history h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+}
+
+.aih-bid-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.aih-bid-history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    font-size: 14px;
+}
+
+.aih-bid-history-item.winning {
+    background: rgba(45, 90, 61, 0.1);
+    border: 1px solid var(--color-winning);
+}
+
+.aih-bid-history-amount {
+    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 16px;
+}
+
+.aih-bid-history-time {
+    color: var(--color-muted);
+    font-size: 12px;
+}
+
+.aih-bid-history-status {
+    margin-left: auto;
+    color: var(--color-winning);
+    font-weight: 500;
+    font-size: 12px;
+}
+
+/* Time remaining in single item page */
+.aih-time-remaining-single {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.aih-time-remaining-single .aih-time-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-time-remaining-single .aih-time-value {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.aih-time-remaining-single.urgent .aih-time-value {
+    color: var(--color-error);
+}
+
+.aih-time-remaining-single.ended .aih-time-value {
+    color: var(--color-muted);
+}
+
+/* Single item image navigation arrows - ALWAYS VISIBLE */
+.aih-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 28px;
+    padding: 0;
+    text-align: center;
+    color: var(--color-primary);
+    z-index: 5;
+    opacity: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Adjust arrow position for better optical centering */
+.aih-img-nav-prev {
+    left: 16px;
+    padding-right: 1px;
+    padding-left: 0;
+}
+
+.aih-img-nav-next {
+    right: 16px;
+    padding-left: 1px;
+    padding-right: 0;
+}
+
+.aih-img-nav:hover {
+    background: var(--color-accent);
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Image dots for single item page */
+.aih-image-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+}
+
+.aih-image-dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.aih-image-dot:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.aih-image-dot.active {
+    background: white;
+    transform: scale(1.3);
+}
+
+/* Lightbox styles */
+.aih-lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    min-width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.98);
+    z-index: 999999;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.aih-lightbox.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* Ensure lightbox covers entire viewport even with scrollbars */
+html.aih-lightbox-open,
+html.aih-lightbox-open body {
+    overflow: hidden !important;
+}
+
+.aih-lightbox-close {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 40px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    cursor: pointer;
+    z-index: 1000001;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.aih-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.aih-lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aih-lightbox-image {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Hide lightbox nav elements by default */
+.aih-lightbox-nav,
+.aih-lightbox-dots,
+.aih-lightbox-counter {
+    display: none !important;
+}
+
+/* Show nav elements when lightbox has multiple images */
+.aih-lightbox.has-multiple .aih-lightbox-nav {
+    display: flex !important;
+}
+
+.aih-lightbox.has-multiple .aih-lightbox-dots {
+    display: flex !important;
+}
+
+/* Hide counter - using dots only */
+.aih-lightbox.has-multiple .aih-lightbox-counter {
+    display: none !important;
+}
+
+.aih-lightbox-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 20px;
+    font-weight: normal;
+    line-height: 36px;
+    text-align: center;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    z-index: 1000000;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.aih-lightbox-nav:hover {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.aih-lightbox-prev {
+    left: 10px;
+    padding-right: 2px;
+}
+
+.aih-lightbox-next {
+    right: 10px;
+    padding-left: 2px;
+}
+
+.aih-lightbox-counter {
+    color: #fff;
+    font-size: 14px;
+    margin-top: 20px;
+    opacity: 0.8;
+}
+
+/* Lightbox dots */
+.aih-lightbox-dots {
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: center;
+}
+
+.aih-lightbox-dot {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.aih-lightbox-dot:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.aih-lightbox-dot.active {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.3);
+}
+
+/* Single item placeholder */
+.aih-single-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    width: 100%;
+    padding: 60px 40px;
+    background: var(--color-bg-alt);
+    color: var(--color-muted);
+}
+
+.aih-single-placeholder .aih-placeholder-id {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--color-accent);
+    margin-bottom: 16px;
+}
+
+.aih-single-placeholder .aih-placeholder-text {
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.aih-upcoming-notice {
+    padding: 16px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    text-align: center;
+    color: #555;
+}
+
+/* --- Single Item Media Queries --- */
+
+/* === Tablet portrait (600px+) === */
+@media (min-width: 600px) {
+    .aih-single-nav-bar {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .aih-back-link {
+        width: auto;
+        text-align: left;
+        order: 0;
+        font-size: 14px;
+    }
+
+    .aih-nav-center {
+        order: 0;
+    }
+
+    .aih-nav-spacer {
+        display: block;
+        width: 100px;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-arrow {
+        position: absolute;
+        top: 200px;
+        transform: none;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+        z-index: 10;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-prev {
+        left: -24px;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-next {
+        right: -24px;
+    }
+
+    .aih-single-image {
+        padding: 16px;
+    }
+
+    .aih-single-image .aih-fav-btn {
+        top: 24px;
+        right: 24px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .aih-single-meta {
+        gap: 12px;
+    }
+
+    .aih-single-details h1 {
+        font-size: clamp(24px, 6vw, 36px);
+    }
+
+    .aih-art-id-badge-single {
+        bottom: 24px;
+        left: 24px;
+        padding: 8px 14px;
+        font-size: 20px;
+    }
+
+    .aih-badge-single {
+        top: 24px;
+        left: 24px;
+    }
+
+    .aih-img-nav-prev {
+        left: 12px;
+    }
+
+    .aih-img-nav-next {
+        right: 12px;
+    }
+
+    .aih-bid-section {
+        padding: 16px;
+    }
+
+    .aih-current-bid {
+        margin-bottom: 20px;
+    }
+
+    .aih-current-bid .aih-bid-amount {
+        font-size: clamp(28px, 7vw, 36px);
+    }
+
+    .aih-bid-form-single .aih-field label {
+        margin-bottom: 6px;
+    }
+
+    .aih-bid-form-single input {
+        height: 38px;
+        font-size: 14px;
+    }
+
+    .aih-bid-form-single .aih-bid-btn {
+        width: 50px;
+        height: 38px;
+        font-size: 14px;
+    }
+}
+
+/* === Tablet landscape (769px+) === */
+@media (min-width: 769px) {
+    .aih-img-nav {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        font-size: 20px;
+        line-height: 32px;
+    }
+
+    .aih-img-nav-prev {
+        left: 24px;
+        padding-right: 2px;
+    }
+
+    .aih-img-nav-next {
+        right: 24px;
+        padding-left: 2px;
+    }
+
+    .aih-image-dot {
+        width: 10px;
+        height: 10px;
+        min-width: 10px;
+        min-height: 10px;
+    }
+
+    .aih-thumbnails {
+        display: flex;
+    }
+
+    .aih-lightbox-nav {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 24px;
+        line-height: 44px;
+    }
+
+    .aih-lightbox-prev {
+        left: 20px;
+    }
+
+    .aih-lightbox-next {
+        right: 20px;
+    }
+}
+
+@media (min-width: 900px) {
+    .aih-single-content-wrapper {
+        padding: 0 60px;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-prev {
+        left: 0;
+    }
+
+    .aih-single-content-wrapper > .aih-nav-next {
+        right: 0;
+    }
+
+    .aih-single-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+
+    .aih-single-image > img {
+        max-height: 55vh;
+    }
+
+    .aih-single-details h1 {
+        font-size: 28px;
+    }
+
+    .aih-info-row {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 16px;
+    }
+}
+
+/* Wider details section - improved grid */
+@media (min-width: 900px) {
+    .aih-single-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+
+    .aih-single-details {
+        max-width: 100%;
+    }
+
+    .aih-piece-info {
+        padding: 20px;
+    }
+
+    .aih-info-row span:last-child {
+        max-width: 65%;
+        text-align: right;
+    }
+
+    /* Better bid section scaling */
+    .aih-bid-section {
+        padding: 24px;
+    }
+
+    .aih-current-bid .aih-bid-amount {
+        font-size: 32px;
+    }
+
+    .aih-single-details h1 {
+        font-size: 28px;
+    }
+}
+
+@media (min-width: 1100px) {
+    .aih-single-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+    }
+
+    .aih-current-bid .aih-bid-amount {
+        font-size: 36px;
+    }
+
+    .aih-single-details h1 {
+        font-size: 32px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .aih-single-content {
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+    }
+}
+
+/* --- Single Item Dark Mode --- */
+.aih-page.dark-mode .aih-img-nav {
+    background: rgba(30, 30, 30, 0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.aih-page.dark-mode .aih-img-nav:hover {
+    background: var(--color-accent);
+    color: #121212;
+}
+
+.aih-page.dark-mode .aih-image-dot {
+    background: rgba(232, 230, 227, 0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.aih-page.dark-mode .aih-image-dot:hover {
+    background: rgba(232, 230, 227, 0.6);
+}
+
+.aih-page.dark-mode .aih-image-dot.active {
+    background: var(--color-primary);
+}
+
+.aih-page.dark-mode .aih-upcoming-notice {
+    background: var(--color-surface);
+    color: var(--color-secondary);
+}
+
+.aih-page.dark-mode .aih-art-id-badge-single {
+    background: rgba(30, 30, 30, 0.95);
+}
+
+
+/* ==========================================================================
+   CHECKOUT PAGE
+   ========================================================================== */
+
+.aih-checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr minmax(350px, 500px);
+    gap: 48px;
+    align-items: start;
+    width: 100%;
+}
+
+.aih-checkout-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin-bottom: 16px;
+}
+
+.aih-checkout-item-image {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    background: var(--color-bg-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aih-checkout-item-image .aih-art-id-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    padding: 3px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-accent);
+    border-radius: 3px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    line-height: 1;
+    z-index: 2;
+}
+
+.aih-checkout-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aih-checkout-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-bg-alt) 0%, var(--color-border) 100%);
+}
+
+.aih-checkout-placeholder span {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.aih-checkout-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.aih-checkout-item-details h4 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin: 4px 0;
+}
+
+.aih-checkout-item-details p {
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.aih-checkout-item-price {
+    text-align: right;
+}
+
+.aih-checkout-item-price span {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+    margin-bottom: 4px;
+}
+
+.aih-checkout-item-price strong {
+    font-family: var(--font-display);
+    font-size: 22px;
+}
+
+.aih-checkout-summary {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 32px;
+    position: sticky;
+    top: 100px;
+    min-width: 320px;
+}
+
+.aih-checkout-summary h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 0;
+    font-size: 15px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aih-summary-row span:first-child {
+    flex-shrink: 0;
+}
+
+.aih-summary-row span:last-child {
+    text-align: right;
+    word-break: break-word;
+}
+
+.aih-summary-total {
+    font-size: 18px;
+    font-weight: 600;
+    border-top: 1px solid var(--color-border);
+    margin-top: 12px;
+    padding-top: 16px;
+}
+
+.aih-summary-total span:last-child {
+    font-family: var(--font-display);
+}
+
+.aih-checkout-note {
+    text-align: center;
+    font-size: 13px;
+    color: var(--color-muted);
+    margin-top: 16px;
+}
+
+/* --- Checkout Media Queries --- */
+
+@media (max-width: 900px) {
+    .aih-checkout-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .aih-checkout-summary {
+        position: static;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .aih-checkout-page .aih-main {
+        padding: 16px;
+    }
+
+    .aih-checkout-item {
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .aih-checkout-item-image {
+        width: 100%;
+        height: 180px;
+    }
+
+    .aih-checkout-item-image .aih-art-id-badge {
+        bottom: 8px;
+        left: 8px;
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    .aih-checkout-item-details {
+        padding: 12px 0;
+    }
+
+    .aih-checkout-item-details h4 {
+        font-size: 16px;
+    }
+
+    .aih-checkout-item-price {
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-top: 12px;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .aih-checkout-item-price span {
+        margin-bottom: 0;
+    }
+
+    .aih-checkout-item-price strong {
+        font-size: 20px;
+    }
+
+    .aih-checkout-summary {
+        padding: 20px;
+    }
+
+    .aih-checkout-summary h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    .aih-summary-row {
+        font-size: 14px;
+        padding: 10px 0;
+    }
+
+    .aih-summary-total {
+        font-size: 16px;
+    }
+
+    .aih-checkout-layout {
+        gap: 24px;
+    }
+}
+
+/* Payment result banners */
+.aih-payment-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+}
+
+.aih-payment-banner strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.aih-payment-banner p {
+    font-size: 14px;
+    margin: 0;
+    opacity: 0.85;
+}
+
+.aih-payment-icon {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.aih-payment-success {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    color: #2e7d32;
+}
+
+.aih-payment-success .aih-payment-icon {
+    background: #2e7d32;
+    color: #fff;
+}
+
+.aih-payment-cancelled {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    color: #e65100;
+}
+
+.aih-payment-cancelled .aih-payment-icon {
+    background: #e65100;
+    color: #fff;
+}
+
+.aih-payment-error {
+    background: #fce4ec;
+    border: 1px solid #ef9a9a;
+    color: #c62828;
+}
+
+.aih-payment-error .aih-payment-icon {
+    background: #c62828;
+    color: #fff;
+}
+
+
+/* ==========================================================================
+   SHARED: ORDER CARDS & MODAL (checkout + my-bids)
+   ========================================================================== */
+
+.aih-orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.aih-order-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 20px;
+}
+
+.aih-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.aih-order-status {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 2px;
+}
+
+.aih-status-paid { background: #e8f5e9; color: var(--color-success); }
+.aih-status-pending { background: #fff3e0; color: #e65100; }
+
+.aih-order-details p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.aih-order-date {
+    color: var(--color-muted);
+    margin-top: 4px !important;
+    font-size: 13px;
+}
+
+/* Clickable Order Cards */
+.aih-order-clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.aih-order-clickable:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.aih-order-view-link {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.aih-order-view-link span {
+    font-size: 13px;
+    color: var(--color-accent);
+    font-weight: 500;
+}
+
+/* Modal Styles */
+.aih-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.aih-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+}
+
+.aih-modal-content {
+    position: relative;
+    background: var(--color-surface);
+    border-radius: 8px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.aih-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-modal-header h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.aih-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--color-muted);
+    padding: 0;
+    line-height: 1;
+}
+
+.aih-modal-close:hover {
+    color: var(--color-primary);
+}
+
+.aih-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.aih-loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-muted);
+}
+
+.aih-order-modal-info {
+    margin-bottom: 20px;
+}
+
+.aih-order-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aih-order-meta .aih-order-date {
+    color: var(--color-muted);
+    font-size: 13px;
+    margin: 0 !important;
+}
+
+.aih-pickup-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 2px;
+}
+
+.aih-order-items-list {
+    margin-bottom: 20px;
+}
+
+.aih-order-items-list h4 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.aih-order-item-row {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+}
+
+.aih-order-item-row:last-child {
+    border-bottom: none;
+}
+
+.aih-order-item-image {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    background: var(--color-bg-alt);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.aih-order-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aih-order-item-image .aih-art-id-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    padding: 2px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-accent);
+    border-radius: 2px;
+    line-height: 1;
+}
+
+.aih-order-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.aih-order-item-info h5 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aih-order-item-info p {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.aih-order-item-price {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.aih-order-totals {
+    background: var(--color-bg);
+    padding: 16px;
+    border-radius: 4px;
+}
+
+.aih-order-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.aih-order-total-final {
+    border-top: 1px solid var(--color-border);
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.aih-order-total-final span:last-child {
+    font-family: var(--font-display);
+}
+
+.aih-error {
+    color: var(--color-error);
+    text-align: center;
+    padding: 20px;
+}
+
+/* --- Shared Modal/Order Mobile --- */
+
+@media (max-width: 600px) {
+    .aih-modal {
+        padding: 10px;
+    }
+
+    .aih-modal-content {
+        max-height: 95vh;
+    }
+
+    .aih-modal-header {
+        padding: 16px 20px;
+    }
+
+    .aih-modal-header h3 {
+        font-size: 18px;
+    }
+
+    .aih-modal-body {
+        padding: 16px;
+    }
+
+    .aih-order-item-row {
+        gap: 12px;
+    }
+
+    .aih-order-item-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .aih-order-item-info h5 {
+        font-size: 14px;
+    }
+
+    .aih-order-item-price {
+        font-size: 14px;
+    }
+}
+
+/* --- Shared Order/Modal/Checkout Dark Mode --- */
+
+.aih-page.dark-mode .aih-checkout-item-details h4,
+.aih-page.dark-mode .aih-checkout-summary h3,
+.aih-page.dark-mode .aih-summary-row,
+.aih-page.dark-mode .aih-summary-total,
+.aih-page.dark-mode .aih-order-header strong,
+.aih-page.dark-mode .aih-order-details p,
+.aih-page.dark-mode .aih-checkout-item-price strong,
+.aih-page.dark-mode .aih-order-total-row,
+.aih-page.dark-mode .aih-order-total-final,
+.aih-page.dark-mode .aih-order-item-info h5,
+.aih-page.dark-mode .aih-order-items-list h4,
+.aih-page.dark-mode .aih-modal-header h3 {
+    color: var(--color-primary);
+}
+
+.aih-page.dark-mode .aih-status-paid {
+    background: rgba(95, 168, 112, 0.15);
+    color: #5fa870;
+}
+
+.aih-page.dark-mode .aih-status-pending {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
+}
+
+.aih-page.dark-mode .aih-pickup-badge {
+    background: rgba(66, 165, 245, 0.15);
+    color: #64b5f6;
+}
+
+.aih-page.dark-mode .aih-order-totals {
+    background: var(--color-bg-alt);
+}
+
+.aih-page.dark-mode .aih-payment-success {
+    background: rgba(95, 168, 112, 0.15);
+    border-color: rgba(95, 168, 112, 0.3);
+    color: #81c784;
+}
+
+.aih-page.dark-mode .aih-payment-cancelled {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.3);
+    color: #ffb74d;
+}
+
+.aih-page.dark-mode .aih-payment-error {
+    background: rgba(216, 108, 111, 0.15);
+    border-color: rgba(216, 108, 111, 0.3);
+    color: #ef9a9a;
+}
+
+.aih-page.dark-mode .aih-order-item-price {
+    color: var(--color-primary);
+}
+
+.aih-page.dark-mode .aih-checkout-item-image .aih-art-id-badge {
+    background: rgba(30, 30, 30, 0.9);
+    color: var(--color-accent);
+}
+
+
+/* ==========================================================================
+   MY BIDS PAGE
+   ========================================================================== */
+
+/* Ensure card image displays properly */
+.aih-mybids-page .aih-card-image {
+    position: relative;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    background: var(--color-bg-alt);
+}
+
+.aih-mybids-page .aih-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.aih-mybids-page .aih-card-image a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Art ID badge - match gallery exactly */
+.aih-mybids-page .aih-art-id-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 8px;
+    font-size: clamp(14px, 4vw, 18px);
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-accent);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 4;
+}
+
+/* Status badge - match gallery exactly */
+.aih-mybids-page .aih-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 2px;
+}
+
+/* Card body and details */
+.aih-mybids-page .aih-card-body {
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.aih-mybids-page .aih-card-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    /* Ellipsis for long titles - 2 lines max */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aih-mybids-page .aih-card-title a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.aih-mybids-page .aih-card-artist {
+    font-size: 12px;
+    color: var(--color-muted);
+    /* Ellipsis for long artist names - 1 line */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Card footer */
+.aih-mybids-page .aih-card-footer {
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+.aih-mybids-page .aih-bid-form {
+    width: calc(100% + 28px);
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+/* Orders heading (my-bids specific) */
+.aih-orders-heading {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 500;
+    margin: 48px 0 24px;
+}
+
+/* --- My Bids Mobile --- */
+
+@media (max-width: 600px) {
+    .aih-mybids-page .aih-gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .aih-mybids-page .aih-card-body {
+        padding: 10px 12px;
+    }
+
+    .aih-mybids-page .aih-card-title {
+        font-size: 14px;
+        -webkit-line-clamp: 1;
+    }
+
+    .aih-mybids-page .aih-card-footer {
+        padding: 10px 12px 12px;
+    }
+
+    .aih-mybids-page .aih-bid-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .aih-mybids-page .aih-bid-info-centered {
+        align-items: center;
+    }
+
+    .aih-mybids-page .aih-bid-info .aih-bid-label {
+        font-size: 9px;
+    }
+
+    .aih-mybids-page .aih-bid-info .aih-bid-amount {
+        font-size: 16px;
+    }
+
+    .aih-mybids-page .aih-bid-form {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 4px !important;
+        width: calc(100% + 24px) !important;
+        margin-left: -12px !important;
+        margin-right: -12px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    .aih-mybids-page .aih-bid-input {
+        flex: 1 !important;
+        min-width: 0 !important;
+        padding: 6px 8px !important;
+        font-size: 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    .aih-mybids-page .aih-bid-btn {
+        flex-shrink: 0 !important;
+        width: 32px !important;
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        letter-spacing: 0 !important;
+    }
+
+    /* Art ID badge mobile - match gallery styles */
+    .aih-mybids-page .aih-art-id-badge {
+        bottom: 8px;
+        left: 8px;
+        padding: 4px 6px;
+        font-size: clamp(12px, 3.5vw, 16px);
+    }
+
+    .aih-mybids-page .aih-badge {
+        top: 8px;
+        left: 8px;
+        padding: 4px 8px;
+        font-size: 9px;
+    }
+
+    .aih-orders-heading {
+        font-size: 20px;
+        margin: 32px 0 16px;
+    }
+
+    .aih-orders-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .aih-mybids-page .aih-gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ==========================================================================
+   MY WINS PAGE
+   ========================================================================== */
+
+.aih-mywins-page .aih-main {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.aih-wins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    width: 100%;
+}
+
+.aih-win-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+}
+
+.aih-win-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.aih-win-image {
+    position: relative;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    background: var(--color-bg-alt);
+}
+
+.aih-win-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.aih-win-image a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.aih-win-image .aih-art-id-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 8px;
+    font-size: clamp(14px, 4vw, 18px);
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-accent);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    line-height: 1;
+    z-index: 4;
+}
+
+.aih-badge-owned {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 2px;
+    background: var(--color-accent);
+    color: white;
+}
+
+.aih-badge-pickup {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 2px;
+    background: var(--color-success);
+    color: white;
+}
+
+.aih-win-body {
+    padding: 16px;
+    flex: 1;
+}
+
+.aih-win-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    /* Ellipsis for long titles - 2 lines max */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aih-win-title a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.aih-win-title a:hover {
+    color: var(--color-accent);
+}
+
+.aih-win-artist {
+    font-size: 14px;
+    color: var(--color-muted);
+    margin-bottom: 8px;
+    /* Ellipsis for long artist names - 1 line */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aih-win-details {
+    font-size: 12px;
+    color: var(--color-muted);
+}
+
+.aih-win-footer {
+    padding: 16px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.aih-win-price,
+.aih-win-order {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.aih-win-label {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-muted);
+}
+
+.aih-win-amount {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.aih-win-order-num {
+    font-size: 12px;
+    color: var(--color-secondary);
+    font-weight: 500;
+}
+
+/* --- My Wins Mobile --- */
+
+@media (max-width: 600px) {
+    .aih-wins-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .aih-win-image .aih-art-id-badge {
+        bottom: 8px;
+        left: 8px;
+        padding: 4px 6px;
+        font-size: clamp(12px, 3.5vw, 16px);
+    }
+
+    .aih-badge-owned,
+    .aih-badge-pickup {
+        top: 8px;
+        padding: 4px 8px;
+        font-size: 9px;
+    }
+
+    .aih-badge-pickup {
+        right: 8px;
+    }
+
+    .aih-win-body {
+        padding: 12px;
+    }
+
+    .aih-win-title {
+        font-size: 14px;
+        -webkit-line-clamp: 1;
+    }
+
+    .aih-win-artist {
+        font-size: 12px;
+    }
+
+    .aih-win-details {
+        font-size: 11px;
+    }
+
+    .aih-win-footer {
+        padding: 12px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .aih-win-amount {
+        font-size: 16px;
+    }
+
+    .aih-win-order-num {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 400px) {
+    .aih-wins-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ==========================================================================
+   WINNERS PAGE
+   ========================================================================== */
+
+.aih-date-divider {
+    display: flex;
+    align-items: center;
+    margin: 40px 0 24px;
+}
+
+.aih-date-divider::before,
+.aih-date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.aih-date-divider span {
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+.aih-badge-sold {
+    background: var(--color-accent);
+    color: white;
+}
+
+.aih-winner-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.aih-winner-info-full {
+    justify-content: center;
+}
+
+.aih-winner-info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.aih-winner-code {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--color-primary);
+}
+
+/* Placeholder for winners page */
+.aih-winner-card .aih-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    background: var(--color-bg-alt);
+}
+
+.aih-winner-card .aih-placeholder-id {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-accent);
+    margin-bottom: 6px;
+}
+
+.aih-winner-card .aih-placeholder-text {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-muted);
+}
+
+/* Fix descender cutoff on card text */
+.aih-winner-card .aih-card-title {
+    line-height: 1.6;
+    padding-bottom: 3px;
+}
+
+.aih-winner-card .aih-card-artist {
+    line-height: 1.4;
+    padding-bottom: 2px;
+}
+
+@media (max-width: 600px) {
+    .aih-winner-code {
+        font-size: 13px;
+    }
 }
 

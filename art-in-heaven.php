@@ -131,6 +131,7 @@ class Art_In_Heaven {
         add_action('init', array($this, 'init'), 0);
         add_action('rest_api_init', array($this, 'init_rest_api'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        add_filter('body_class', array($this, 'add_body_class'));
         add_action('wp_head', array($this, 'add_preconnect_hints'), 1);
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
@@ -427,6 +428,29 @@ class Art_In_Heaven {
         }
     }
     
+    /**
+     * Add body class on plugin pages for CSS targeting
+     */
+    public function add_body_class($classes) {
+        global $post;
+        if (!$post) return $classes;
+
+        $plugin_pages = array(
+            get_option('aih_gallery_page'),
+            get_option('aih_my_bids_page'),
+            get_option('aih_checkout_page'),
+            get_option('aih_login_page'),
+            get_option('aih_winners_page'),
+            get_option('aih_my_wins_page'),
+        );
+
+        if (in_array($post->ID, array_filter($plugin_pages))) {
+            $classes[] = 'aih-active';
+        }
+
+        return $classes;
+    }
+
     /**
      * Enqueue frontend assets
      */

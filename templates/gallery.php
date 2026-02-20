@@ -348,7 +348,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
 
                 <?php if ($is_upcoming): ?>
                 <div class="aih-card-footer">
-                    <div class="aih-upcoming-notice" style="padding: 8px; text-align: center; color: #888; font-size: 0.85em;">
+                    <div class="aih-upcoming-notice aih-upcoming-notice--card">
                         Bidding starts <?php echo esc_html(wp_date('M j, g:i A', strtotime($piece->auction_start))); ?>
                     </div>
                 </div>
