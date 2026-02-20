@@ -109,6 +109,8 @@ $payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
         </div>
     </header>
 
+    <div class="aih-ptr-indicator"><span class="aih-ptr-spinner"></span></div>
+
     <main class="aih-main">
         <div class="aih-gallery-header">
             <div class="aih-gallery-title">
@@ -193,6 +195,9 @@ $payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
                         <div>
                             <span class="aih-bid-label">Your Bid</span>
                             <span class="aih-bid-amount">$<?php echo number_format($bid->bid_amount); ?></span>
+                            <?php if (isset($bid->bid_count) && $bid->bid_count > 1): ?>
+                            <span class="aih-bid-count">(<?php echo intval($bid->bid_count); ?> bids)</span>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -365,21 +370,25 @@ jQuery(document).ready(function($) {
 
         if (!amount) { $msg.addClass('error').text('Enter a bid amount').show(); return; }
 
-        $btn.prop('disabled', true).text('...');
-        $msg.hide();
+        var formatted = '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        window.aihConfirmBid(formatted, function() {
+            $btn.prop('disabled', true).text('...');
+            $msg.hide();
 
-        $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
-            if (r.success) {
-                $msg.removeClass('error').addClass('success').text('Bid placed!').show();
-                $btn.prop('disabled', true);
-                setTimeout(function() { location.reload(); }, 1500);
-            } else {
-                $msg.removeClass('success').addClass('error').text(r.data.message || 'Failed').show();
+            $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
+                if (r.success) {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    $msg.removeClass('error').addClass('success').text('Bid placed!').show();
+                    $btn.prop('disabled', true);
+                    setTimeout(function() { location.reload(); }, 1500);
+                } else {
+                    $msg.removeClass('success').addClass('error').text(r.data.message || 'Failed').show();
+                    $btn.prop('disabled', false).text('Bid');
+                }
+            }).fail(function() {
+                $msg.removeClass('success').addClass('error').text('Connection error. Please try again.').show();
                 $btn.prop('disabled', false).text('Bid');
-            }
-        }).fail(function() {
-            $msg.removeClass('success').addClass('error').text('Connection error. Please try again.').show();
-            $btn.prop('disabled', false).text('Bid');
+            });
         });
     });
 
@@ -581,14 +590,6 @@ jQuery(document).ready(function($) {
 
 <style>
 /* My Bids Page Specific Styles */
-.aih-mybids-page .aih-card.outbid {
-    border-color: var(--color-error);
-}
-
-.aih-badge-outbid {
-    background: var(--color-error);
-    color: white;
-}
 
 /* Ensure card image displays properly */
 .aih-mybids-page .aih-card-image {

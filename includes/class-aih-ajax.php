@@ -2366,6 +2366,17 @@ class AIH_Ajax {
             $winning_ids[$row->art_piece_id] = true;
         }
 
+        // Batch fetch which pieces this bidder has bid on
+        $bid_rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT DISTINCT art_piece_id FROM $bids_table
+             WHERE art_piece_id IN ($placeholders) AND bidder_id = %s AND bid_status = 'valid'",
+            ...array_merge($ids, array($bidder_id))
+        ));
+        $has_bid_ids = array();
+        foreach ($bid_rows as $row) {
+            $has_bid_ids[$row->art_piece_id] = true;
+        }
+
         $items = array();
         foreach ($ids as $id) {
             $piece = isset($art_pieces[$id]) ? $art_pieces[$id] : null;
@@ -2389,6 +2400,7 @@ class AIH_Ajax {
                 'min_bid'    => $min_bid,
                 'has_bids'   => $has_bids,
                 'status'     => $status,
+                'has_bid'    => isset($has_bid_ids[$id]),
             );
         }
 

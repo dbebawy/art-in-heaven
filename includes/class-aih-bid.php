@@ -261,6 +261,7 @@ class AIH_Bid {
             "SELECT b.*, a.title, a.title as art_title, a.artist, a.art_id, a.auction_end, a.status as auction_status,
                     a.watermarked_url, a.watermarked_url as image_url, a.image_url as original_image_url,
                     a.starting_bid, a.show_end_time,
+                    (SELECT COUNT(*) FROM {$this->table} WHERE art_piece_id = b.art_piece_id AND bidder_id = %s AND bid_status = 'valid') as bid_count,
                     CASE
                         WHEN a.auction_end IS NOT NULL AND a.auction_end <= %s THEN 'ended'
                         WHEN a.status = 'ended' AND (a.auction_end IS NULL OR a.auction_end > %s) AND (a.auction_start IS NULL OR a.auction_start <= %s) THEN 'active'
@@ -281,10 +282,27 @@ class AIH_Bid {
              WHERE b.bidder_id = %s AND b.bid_status = 'valid'
              GROUP BY b.art_piece_id
              ORDER BY b.bid_time DESC",
-            $now, $now, $now, $now, $bidder_id, $bidder_id, $bidder_id
+            $bidder_id, $now, $now, $now, $now, $bidder_id, $bidder_id, $bidder_id
         ));
     }
     
+    /**
+     * Check if a bidder has placed any valid bid on an art piece
+     */
+    public function has_bidder_bid($art_piece_id, $bidder_id) {
+        global $wpdb;
+
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT 1 FROM {$this->table}
+             WHERE art_piece_id = %d AND bidder_id = %s AND bid_status = 'valid'
+             LIMIT 1",
+            $art_piece_id,
+            $bidder_id
+        ));
+
+        return $result == 1;
+    }
+
     /**
      * Check if bidder is winning an art piece
      */

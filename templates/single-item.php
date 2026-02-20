@@ -507,13 +507,13 @@ jQuery(document).ready(function($) {
 
         // Confirm bid amount to prevent fat-finger mistakes
         var formatted = '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (!confirm('Please confirm your bid of ' + formatted)) { return; }
-
+        window.aihConfirmBid(formatted, function() {
         $btn.prop('disabled', true).addClass('loading');
         $msg.hide().removeClass('error success');
 
         $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:$btn.data('id'), bid_amount:amount}, function(r) {
             if (r.success) {
+                if (navigator.vibrate) navigator.vibrate(100);
                 $msg.removeClass('error').addClass('success').text('Bid placed successfully!').show();
                 $('.aih-single-image').find('.aih-badge').remove();
                 $('.aih-single-image').prepend('<span class="aih-badge aih-badge-winning aih-badge-single">Winning</span>');
@@ -530,6 +530,7 @@ jQuery(document).ready(function($) {
             $msg.removeClass('success').addClass('error').text('Connection error. Please try again.').show();
             $btn.prop('disabled', false).removeClass('loading');
         });
+        }); // end aihConfirmBid
     });
 
     $('#bid-amount').on('keypress', function(e) {

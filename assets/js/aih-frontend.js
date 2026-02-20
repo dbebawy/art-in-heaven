@@ -264,10 +264,16 @@
         // Confirm bid amount to prevent fat-finger mistakes
         var numericBid = parseFloat(bidAmount);
         var formatted = '$' + numericBid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (!confirm('Please confirm your bid of ' + formatted)) {
-            return;
-        }
 
+        if (typeof window.aihConfirmBid === 'function') {
+            window.aihConfirmBid(formatted, function() { doSubmitBid(artId, bidAmount, $notice); });
+        } else {
+            if (!confirm('Please confirm your bid of ' + formatted)) { return; }
+            doSubmitBid(artId, bidAmount, $notice);
+        }
+    }
+
+    function doSubmitBid(artId, bidAmount, $notice) {
         $.ajax({
             url: aihAjax.ajaxurl,
             type: 'POST',
@@ -279,19 +285,20 @@
             },
             success: function(response) {
                 if (response.success) {
+                    if (navigator.vibrate) navigator.vibrate(100);
                     $notice.addClass('success').text(aihAjax.strings.bidSuccess).show();
                     showToast(aihAjax.strings.bidSuccess, 'success');
-                    
+
                     // Clear input
                     $('#aih-bid-amount, #aih-single-bid-amount').val('');
-                    
+
                     // Reload details to update user bids (only if modal is still open)
                     setTimeout(function() {
                         if ($('#aih-detail-modal').is(':visible')) {
                             loadArtDetails(artId, false);
                         }
                     }, 1000);
-                    
+
                     // Update card if visible
                     updateCardWinningStatus(artId, true);
 
@@ -302,15 +309,15 @@
 
                 } else {
                     var message = response.data.message || aihAjax.strings.bidError;
-                    
+
                     if (response.data.bid_too_low) {
                         message = aihAjax.strings.bidTooLow;
                     }
-                    
+
                     if (response.data.login_required) {
                         message = aihAjax.strings.loginRequired;
                     }
-                    
+
                     $notice.addClass('error').text(message).show();
                     showToast(message, 'error');
                 }
@@ -681,5 +688,105 @@
 
     // Expose showToast for push notification fallback
     window.showToast = showToast;
+
+    // =============================================
+    // CONFIRM BID MODAL (replaces native confirm())
+    // =============================================
+    (function initConfirmModal() {
+        // Inject modal HTML if not present
+        if (!$('#aih-confirm-modal').length) {
+            $('body').append(
+                '<div id="aih-confirm-modal" class="aih-confirm-overlay">' +
+                    '<div class="aih-confirm-card">' +
+                        '<p class="aih-confirm-text">Confirm bid of <strong id="aih-confirm-amount"></strong>?</p>' +
+                        '<div class="aih-confirm-actions">' +
+                            '<button type="button" class="aih-confirm-cancel">Cancel</button>' +
+                            '<button type="button" class="aih-confirm-yes">Confirm</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            );
+        }
+
+        var $modal = $('#aih-confirm-modal');
+        var pendingCallback = null;
+
+        function closeModal() {
+            $modal.removeClass('active');
+            pendingCallback = null;
+        }
+
+        $modal.on('click', '.aih-confirm-cancel', closeModal);
+        $modal.on('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        $modal.on('click', '.aih-confirm-yes', function() {
+            var cb = pendingCallback;
+            closeModal();
+            if (typeof cb === 'function') cb();
+        });
+
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $modal.hasClass('active')) {
+                closeModal();
+            }
+        });
+
+        // Global function used by all templates
+        window.aihConfirmBid = function(amount, callback) {
+            $('#aih-confirm-amount').text(amount);
+            pendingCallback = callback;
+            $modal.addClass('active');
+            // Focus trap: focus the confirm button
+            $modal.find('.aih-confirm-yes').focus();
+        };
+    })();
+
+    // =============================================
+    // PULL-TO-REFRESH (mobile only)
+    // =============================================
+    (function initPullToRefresh() {
+        if (!('ontouchstart' in window)) return;
+
+        var $indicator = $('.aih-ptr-indicator');
+        if (!$indicator.length) return;
+
+        var startY = 0;
+        var pulling = false;
+        var threshold = 60;
+
+        var main = document.querySelector('.aih-main');
+        if (!main) return;
+
+        main.addEventListener('touchstart', function(e) {
+            if (window.scrollY === 0) {
+                startY = e.touches[0].clientY;
+                pulling = true;
+            }
+        }, { passive: true });
+
+        main.addEventListener('touchmove', function(e) {
+            if (!pulling) return;
+            var dist = e.touches[0].clientY - startY;
+            if (dist < 0) { pulling = false; return; }
+            if (dist > 0 && window.scrollY === 0) {
+                var translateY = Math.min(dist * 0.4, 80) - 60;
+                $indicator.addClass('pulling').css('transform', 'translateX(-50%) translateY(' + translateY + 'px)');
+            }
+        }, { passive: true });
+
+        main.addEventListener('touchend', function() {
+            if (!pulling) return;
+            pulling = false;
+            var currentY = parseFloat($indicator.css('transform').split(',')[5]) || -60;
+            if (currentY > -10) {
+                $indicator.removeClass('pulling').addClass('releasing');
+                setTimeout(function() { location.reload(); }, 600);
+            } else {
+                $indicator.removeClass('pulling').css('transform', '');
+            }
+        }, { passive: true });
+    })();
 
 })(jQuery);

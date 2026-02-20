@@ -140,6 +140,8 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
         </div>
     </header>
 
+    <div class="aih-ptr-indicator"><span class="aih-ptr-spinner"></span></div>
+
     <main class="aih-main">
         <div class="aih-gallery-header">
             <div class="aih-gallery-title">
@@ -209,6 +211,15 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                         <option value="favorites">Favorites Only</option>
                     </select>
                 </div>
+                <div class="aih-filter-section">
+                    <label class="aih-filter-label">Status</label>
+                    <select id="aih-filter-status" class="aih-select">
+                        <option value="">All</option>
+                        <option value="ending-soon">Ending Soon (&lt; 1 hour)</option>
+                        <option value="active">Active</option>
+                        <option value="ended">Ended</option>
+                    </select>
+                </div>
             </div>
             <button type="button" class="aih-filter-reset" id="aih-filter-reset">Reset Filters</button>
             </div>
@@ -226,6 +237,7 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
         <?php else: ?>
         <div class="aih-gallery-grid" id="aih-gallery">
             <?php foreach ($art_pieces as $piece):
+                $bidder_has_bid_check = false;
                 $is_favorite = $favorites->is_favorite($bidder_id, $piece->id);
                 $is_winning = $bid_model->is_bidder_winning($piece->id, $bidder_id);
                 $current_bid = $bid_model->get_highest_bid_amount($piece->id);
@@ -271,7 +283,15 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                 } elseif ($is_winning) {
                     $status_class = 'winning';
                     $status_text = 'Winning';
+                } else {
+                    // Check if bidder has placed a bid on this piece (outbid)
+                    $bidder_has_bid_check = $bid_model->has_bidder_bid($piece->id, $bidder_id);
+                    if ($bidder_has_bid_check) {
+                        $status_class = 'outbid';
+                        $status_text = 'Outbid';
+                    }
                 }
+                $bidder_has_bid_on_piece = $is_winning || (!empty($bidder_has_bid_check));
             ?>
             <article class="aih-card <?php echo $status_class; ?>"
                      data-id="<?php echo intval($piece->id); ?>"
@@ -279,7 +299,8 @@ $bid_increment = floatval(get_option('aih_bid_increment', 1));
                      data-title="<?php echo esc_attr($piece->title); ?>"
                      data-artist="<?php echo esc_attr($piece->artist); ?>"
                      data-medium="<?php echo esc_attr($piece->medium); ?>"
-                     <?php if (!empty($piece->auction_end)): ?>data-end="<?php echo esc_attr($piece->auction_end); ?>"<?php endif; ?>>
+                     <?php if (!empty($piece->auction_end)): ?>data-end="<?php echo esc_attr($piece->auction_end); ?>"<?php endif; ?>
+                     <?php if (!empty($bidder_has_bid_on_piece)): ?>data-has-bid="1"<?php endif; ?>>
 
                 <div class="aih-card-image" data-favorite="<?php echo $is_favorite ? '1' : '0'; ?>">
                     <?php if ($primary_image): ?>
@@ -374,6 +395,7 @@ jQuery(document).ready(function($) {
         var artist = $('#aih-filter-artist').val();
         var medium = $('#aih-filter-medium').val();
         var favoritesOnly = $('#aih-filter-favorites').val() === 'favorites';
+        var statusFilter = $('#aih-filter-status').val();
 
         var visibleCount = 0;
 
@@ -413,6 +435,28 @@ jQuery(document).ready(function($) {
             // Favorites filter
             if (show && favoritesOnly && !isFavorite) {
                 show = false;
+            }
+
+            // Status filter
+            if (show && statusFilter) {
+                var isCardEnded = $card.hasClass('ended') || $card.hasClass('won') || $card.hasClass('paid');
+                if (statusFilter === 'ended') {
+                    if (!isCardEnded) show = false;
+                } else if (statusFilter === 'active') {
+                    if (isCardEnded) show = false;
+                } else if (statusFilter === 'ending-soon') {
+                    if (isCardEnded) { show = false; }
+                    else {
+                        var cardEnd = $card.attr('data-end');
+                        if (!cardEnd) { show = false; }
+                        else {
+                            var endMs = new Date(cardEnd.replace(/-/g, '/')).getTime();
+                            var nowMs = new Date().getTime() + timeOffset;
+                            var remaining = endMs - nowMs;
+                            if (remaining <= 0 || remaining >= 3600000) show = false;
+                        }
+                    }
+                }
             }
 
             // Show or hide the card
@@ -537,7 +581,7 @@ jQuery(document).ready(function($) {
         filterCards();
     });
 
-    $('#aih-filter-artist, #aih-filter-medium, #aih-filter-favorites').on('change', function() {
+    $('#aih-filter-artist, #aih-filter-medium, #aih-filter-favorites, #aih-filter-status').on('change', function() {
         filterCards();
     });
 
@@ -557,6 +601,7 @@ jQuery(document).ready(function($) {
         $('#aih-filter-artist').val('');
         $('#aih-filter-medium').val('');
         $('#aih-filter-favorites').val('');
+        $('#aih-filter-status').val('');
         userChangedSort = false;
         sortCards('default');
         filterCards();
@@ -607,30 +652,31 @@ jQuery(document).ready(function($) {
 
         // Confirm bid amount to prevent fat-finger mistakes
         var formatted = '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (!confirm('Please confirm your bid of ' + formatted)) { return; }
+        window.aihConfirmBid(formatted, function() {
+            $btn.prop('disabled', true).text('...');
+            $msg.hide();
 
-        $btn.prop('disabled', true).text('...');
-        $msg.hide();
-
-        $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
-            if (r.success) {
-                $msg.removeClass('error').addClass('success').text('Bid placed!').show();
-                $card.addClass('winning');
-                var $badge = $card.find('.aih-badge');
-                if ($badge.length) {
-                    $badge.removeClass('aih-badge-ended').addClass('aih-badge-winning').text('Winning');
+            $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
+                if (r.success) {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    $msg.removeClass('error').addClass('success').text('Bid placed!').show();
+                    $card.removeClass('outbid').addClass('winning').attr('data-has-bid', '1');
+                    var $badge = $card.find('.aih-badge');
+                    if ($badge.length) {
+                        $badge.attr('class', 'aih-badge aih-badge-winning').text('Winning');
+                    } else {
+                        $card.find('.aih-card-image').append('<div class="aih-badge aih-badge-winning">Winning</div>');
+                    }
+                    $input.val('');
+                    setTimeout(function() { $msg.fadeOut(); }, 2000);
                 } else {
-                    $card.find('.aih-card-image').append('<div class="aih-badge aih-badge-winning">Winning</div>');
+                    $msg.removeClass('success').addClass('error').text(r.data.message || 'Bid failed').show();
                 }
-                $input.val('');
-                setTimeout(function() { $msg.fadeOut(); }, 2000);
-            } else {
-                $msg.removeClass('success').addClass('error').text(r.data.message || 'Bid failed').show();
-            }
-            $btn.prop('disabled', false).text('Bid');
-        }).fail(function() {
-            $msg.removeClass('success').addClass('error').text('Connection error. Please try again.').show();
-            $btn.prop('disabled', false).text('Bid');
+                $btn.prop('disabled', false).text('Bid');
+            }).fail(function() {
+                $msg.removeClass('success').addClass('error').text('Connection error. Please try again.').show();
+                $btn.prop('disabled', false).text('Bid');
+            });
         });
     });
 
@@ -784,10 +830,13 @@ jQuery(document).ready(function($) {
                 var $card = $('.aih-card[data-id="' + id + '"]');
                 if (!$card.length) return;
 
-                // Update winning status
+                // Update winning/outbid status
                 var wasWinning = $card.hasClass('winning');
+                var hasBid = $card.attr('data-has-bid') === '1' || info.has_bid;
+                if (info.has_bid) $card.attr('data-has-bid', '1');
+
                 if (info.is_winning && !wasWinning) {
-                    $card.addClass('winning');
+                    $card.removeClass('outbid').addClass('winning');
                     var $badge = $card.find('.aih-badge');
                     if ($badge.length) {
                         $badge.attr('class', 'aih-badge aih-badge-winning').text('Winning');
@@ -796,7 +845,17 @@ jQuery(document).ready(function($) {
                     }
                 } else if (!info.is_winning && wasWinning) {
                     $card.removeClass('winning');
-                    $card.find('.aih-badge').remove();
+                    if (hasBid) {
+                        $card.addClass('outbid');
+                        var $badge = $card.find('.aih-badge');
+                        if ($badge.length) {
+                            $badge.attr('class', 'aih-badge aih-badge-outbid').text('Outbid');
+                        } else {
+                            $card.find('.aih-card-image').append('<div class="aih-badge aih-badge-outbid">Outbid</div>');
+                        }
+                    } else {
+                        $card.find('.aih-badge').remove();
+                    }
                 }
 
                 // Update min bid on input
