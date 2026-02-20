@@ -2083,6 +2083,39 @@ class AIH_Ajax {
 
     // ========== LOG VIEWER ==========
 
+    /**
+     * Resolve the active PHP/WordPress error log file path.
+     *
+     * Checks, in order:
+     *  1. WP_DEBUG_LOG constant (when set to a string path)
+     *  2. wp-content/debug.log (WP default when WP_DEBUG_LOG === true)
+     *  3. php.ini error_log directive
+     *
+     * @return string|false  Absolute path to a readable log file, or false.
+     */
+    private function resolve_log_file() {
+        // 1. WP_DEBUG_LOG set to a custom path
+        if (defined('WP_DEBUG_LOG') && is_string(WP_DEBUG_LOG) && WP_DEBUG_LOG !== '' && WP_DEBUG_LOG !== '1') {
+            if (file_exists(WP_DEBUG_LOG) && is_readable(WP_DEBUG_LOG)) {
+                return WP_DEBUG_LOG;
+            }
+        }
+
+        // 2. Default WP location
+        $wp_log = WP_CONTENT_DIR . '/debug.log';
+        if (file_exists($wp_log) && is_readable($wp_log)) {
+            return $wp_log;
+        }
+
+        // 3. php.ini error_log directive
+        $php_log = ini_get('error_log');
+        if ($php_log && file_exists($php_log) && is_readable($php_log)) {
+            return $php_log;
+        }
+
+        return false;
+    }
+
     public function admin_get_logs() {
         check_ajax_referer('aih_admin_nonce', 'nonce');
 
@@ -2090,13 +2123,34 @@ class AIH_Ajax {
             wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
 
-        $log_file = WP_CONTENT_DIR . '/debug.log';
+        $log_file = $this->resolve_log_file();
 
-        if (!file_exists($log_file)) {
+        if (!$log_file) {
+            // Build a helpful diagnostic message
+            $hints = array();
+            if (!defined('WP_DEBUG') || !WP_DEBUG) {
+                $hints[] = 'WP_DEBUG is not enabled';
+            }
+            if (!defined('WP_DEBUG_LOG') || !WP_DEBUG_LOG) {
+                $hints[] = 'WP_DEBUG_LOG is not enabled';
+            }
+            $default_path = WP_CONTENT_DIR . '/debug.log';
+            if (!file_exists($default_path)) {
+                $hints[] = $default_path . ' does not exist';
+            } elseif (!is_readable($default_path)) {
+                $hints[] = $default_path . ' exists but is not readable';
+            }
+            $php_log = ini_get('error_log');
+            if ($php_log && file_exists($php_log) && !is_readable($php_log)) {
+                $hints[] = $php_log . ' exists but is not readable';
+            }
+
             wp_send_json_success(array(
                 'entries'   => array(),
                 'total'     => 0,
                 'file_size' => '0 B',
+                'log_path'  => '',
+                'hints'     => $hints,
             ));
         }
 
@@ -2111,12 +2165,10 @@ class AIH_Ajax {
         $all_lines = array();
         $fp = fopen($log_file, 'r');
         if ($fp) {
-            // For files under 2MB, just read the whole thing
             if ($file_size < 2 * 1024 * 1024) {
                 $content = fread($fp, $file_size);
-                $all_lines = explode("\n", $content);
+                $all_lines = $content !== false && $content !== '' ? explode("\n", $content) : array();
             } else {
-                // For larger files, read from the end
                 $chunk_size = 8192;
                 $buffer = '';
                 fseek($fp, 0, SEEK_END);
@@ -2156,6 +2208,8 @@ class AIH_Ajax {
             'entries'   => $all_lines,
             'total'     => $total,
             'file_size' => $size_label,
+            'log_path'  => $log_file,
+            'hints'     => array(),
         ));
     }
 
@@ -2166,15 +2220,17 @@ class AIH_Ajax {
             wp_send_json_error(array('message' => __('Permission denied.', 'art-in-heaven')));
         }
 
-        $log_file = WP_CONTENT_DIR . '/debug.log';
+        $log_file = $this->resolve_log_file();
 
-        if (file_exists($log_file)) {
-            $fp = fopen($log_file, 'w');
-            if ($fp) {
-                fclose($fp);
-            } else {
-                wp_send_json_error(array('message' => __('Could not clear log file.', 'art-in-heaven')));
-            }
+        if (!$log_file) {
+            wp_send_json_error(array('message' => __('No log file found.', 'art-in-heaven')));
+        }
+
+        $fp = fopen($log_file, 'w');
+        if ($fp) {
+            fclose($fp);
+        } else {
+            wp_send_json_error(array('message' => __('Could not clear log file.', 'art-in-heaven')));
         }
 
         wp_send_json_success(array('message' => __('Log file cleared.', 'art-in-heaven')));

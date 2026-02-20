@@ -7,16 +7,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$log_file  = WP_CONTENT_DIR . '/debug.log';
-$file_size = file_exists($log_file) ? size_format(filesize($log_file)) : '0 B';
-$last_mod  = file_exists($log_file) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), filemtime($log_file)) : '—';
 ?>
 <div class="wrap aih-admin-wrap">
     <h1><?php esc_html_e('Log Viewer', 'art-in-heaven'); ?></h1>
-    <p class="description">
-        <?php echo esc_html(sprintf(__('File size: %s | Last modified: %s', 'art-in-heaven'), $file_size, $last_mod)); ?>
-        <span id="aih-log-file-size"></span>
-    </p>
+    <p class="description" id="aih-log-meta"></p>
+    <div id="aih-log-hints" style="display:none;background:#fff3cd;border:1px solid #ffc107;padding:10px 14px;border-radius:4px;margin-bottom:12px;"></div>
 
     <div class="aih-log-controls" style="display:flex;align-items:center;gap:10px;margin:15px 0;flex-wrap:wrap;">
         <label for="aih-log-filter"><?php esc_html_e('Filter:', 'art-in-heaven'); ?></label>
@@ -80,6 +75,26 @@ jQuery(function($) {
         }, function(res) {
             if (res.success) {
                 var d = res.data;
+
+                // Show resolved path and file info
+                if (d.log_path) {
+                    $('#aih-log-meta').text('<?php echo esc_js(__('Log file:', 'art-in-heaven')); ?> ' + d.log_path + ' — <?php echo esc_js(__('File size:', 'art-in-heaven')); ?> ' + d.file_size);
+                } else {
+                    $('#aih-log-meta').text('<?php echo esc_js(__('No log file found.', 'art-in-heaven')); ?>');
+                }
+
+                // Show diagnostic hints if any
+                if (d.hints && d.hints.length) {
+                    var hintsHtml = '<strong><?php echo esc_js(__('Diagnostics:', 'art-in-heaven')); ?></strong><ul style="margin:5px 0 0 18px;">';
+                    for (var i = 0; i < d.hints.length; i++) {
+                        hintsHtml += '<li>' + $('<span>').text(d.hints[i]).html() + '</li>';
+                    }
+                    hintsHtml += '</ul>';
+                    $('#aih-log-hints').html(hintsHtml).show();
+                } else {
+                    $('#aih-log-hints').hide();
+                }
+
                 var text = d.entries.length ? d.entries.join("\n") : '<?php echo esc_js(__('No log entries found.', 'art-in-heaven')); ?>';
                 $('#aih-log-output').text(text);
                 $('#aih-log-count').text(
