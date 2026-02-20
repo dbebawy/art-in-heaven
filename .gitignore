@@ -1,14 +1,5 @@
-# WordPress installation (Local by Flywheel)
-app/
-conf/
-logs/
-nginx-config.conf
-
 # OS files
 .DS_Store
-
-# Local by Flywheel
-local-xdebuginfo.php
 
 # Node
 node_modules/
