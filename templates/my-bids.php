@@ -88,7 +88,7 @@ $payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
                     $status_text = 'Outbid';
                 }
             ?>
-            <article class="aih-card <?php echo $status_class; ?>" data-id="<?php echo intval($bid->art_piece_id); ?>" <?php if (!empty($bid->auction_end)): ?>data-end="<?php echo esc_attr($bid->auction_end); ?>"<?php endif; ?>>
+            <article class="aih-card <?php echo esc_attr($status_class); ?>" data-id="<?php echo intval($bid->art_piece_id); ?>" <?php if (!empty($bid->auction_end)): ?>data-end="<?php echo esc_attr($bid->auction_end); ?>"<?php endif; ?>>
                 <div class="aih-card-image">
                     <?php if ($image_url): ?>
                     <a href="<?php echo esc_url($gallery_url); ?>?art_id=<?php echo intval($bid->art_piece_id); ?>">
@@ -105,7 +105,7 @@ $payment_statuses = $checkout->get_bidder_payment_statuses($bidder_id);
                     <?php if ($image_url): ?>
                     <span class="aih-art-id-badge"><?php echo esc_html(isset($bid->art_id) ? $bid->art_id : ''); ?></span>
                     <?php endif; ?>
-                    <div class="aih-badge aih-badge-<?php echo $status_class; ?>"><?php echo $status_text; ?></div>
+                    <div class="aih-badge aih-badge-<?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_text); ?></div>
 
                     <?php if (!$is_ended && !empty($bid->auction_end) && !empty($bid->show_end_time)): ?>
                     <div class="aih-time-remaining" data-end="<?php echo esc_attr($bid->auction_end); ?>">

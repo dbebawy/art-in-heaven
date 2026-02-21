@@ -105,9 +105,9 @@ jQuery(document).ready(function($) {
         var $input = $card.find('.aih-bid-input');
         var $msg = $card.find('.aih-bid-message');
         var id = $btn.data('id');
-        var amount = parseInt($input.val());
+        var amount = parseInt(($input.val() || '').replace(/[^0-9]/g, ''), 10);
 
-        if (!amount) { $msg.addClass('error').text(aihAjax.strings.enterValidBid).show(); return; }
+        if (!amount || amount < 1) { $msg.addClass('error').text(aihAjax.strings.enterValidBid).show(); return; }
 
         var formatted = '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         window.aihConfirmBid(formatted, function() {
@@ -297,28 +297,15 @@ jQuery(document).ready(function($) {
                     $input.attr('data-min', info.min_bid).data('min', info.min_bid);
                 }
             });
-
-            // Update cart count
-            var $cartCount = $('.aih-cart-count');
-            if (r.data.cart_count > 0) {
-                if ($cartCount.length) {
-                    $cartCount.text(r.data.cart_count);
-                } else {
-                    var checkoutUrl = aihAjax.checkoutUrl;
-                    if (checkoutUrl) {
-                        $('.aih-header-actions .aih-theme-toggle').after(
-                            '<a href="' + checkoutUrl + '" class="aih-cart-link"><span>&#128722;</span><span class="aih-cart-count">' + r.data.cart_count + '</span></a>'
-                        );
-                    }
-                }
-            }
+        }).fail(function() {
+            // Network error or server error — polling continues via setTimeout chain
         });
     }
 
     function startPolling() {
-        if (pollTimer) clearInterval(pollTimer);
+        if (pollTimer) clearTimeout(pollTimer);
         var interval = document.hidden ? 60000 : getSmartInterval();
-        pollTimer = setInterval(function() {
+        pollTimer = setTimeout(function() {
             pollStatus();
             startPolling();
         }, interval);
@@ -326,7 +313,7 @@ jQuery(document).ready(function($) {
 
     function stopPolling() {
         if (pollTimer) {
-            clearInterval(pollTimer);
+            clearTimeout(pollTimer);
             pollTimer = null;
         }
     }
@@ -339,7 +326,7 @@ jQuery(document).ready(function($) {
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             stopPolling();
-            pollTimer = setInterval(pollStatus, 60000);
+            pollTimer = setTimeout(pollStatus, 60000);
         } else {
             stopPolling();
             pollStatus();

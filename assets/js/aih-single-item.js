@@ -186,10 +186,10 @@ jQuery(document).ready(function($) {
     // Place bid
     $('#place-bid').on('click', function() {
         var $btn = $(this);
-        var amount = parseInt($('#bid-amount').val());
+        var amount = parseInt(($('#bid-amount').val() || '').replace(/[^0-9]/g, ''), 10);
         var $msg = $('#bid-message');
 
-        if (!amount) { $msg.addClass('error').text(aihAjax.strings.enterValidBid).show(); return; }
+        if (!amount || amount < 1) { $msg.addClass('error').text(aihAjax.strings.enterValidBid).show(); return; }
 
         // Confirm bid amount to prevent fat-finger mistakes
         var formatted = '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -200,6 +200,8 @@ jQuery(document).ready(function($) {
         $.post(aihAjax.ajaxurl, {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:$btn.data('id'), bid_amount:amount}, function(r) {
             if (r.success) {
                 if (navigator.vibrate) navigator.vibrate(100);
+                bidJustPlaced = true;
+                setTimeout(function() { bidJustPlaced = false; }, 5000);
                 $msg.removeClass('error').addClass('success').text(aihAjax.strings.bidSuccess).show();
                 $('.aih-single-image').find('.aih-badge').remove();
                 $('.aih-single-image').prepend('<span class="aih-badge aih-badge-winning aih-badge-single">Winning</span>');
@@ -309,6 +311,7 @@ jQuery(document).ready(function($) {
     var pieceId = parseInt($wrapper.attr('data-piece-id')) || 0;
     var isEnded = $wrapper.attr('data-is-ended') === '1';
     var pollTimer = null;
+    var bidJustPlaced = false;
 
     // Smart polling: calculate interval based on auction end time
     function getSmartInterval() {
@@ -332,6 +335,8 @@ jQuery(document).ready(function($) {
             art_piece_ids: [pieceId]
         }, function(r) {
             if (!r.success || !r.data || !r.data.items) return;
+            // Skip UI updates if a bid was just placed (avoids stale cache overwriting fresh state)
+            if (bidJustPlaced) return;
             var info = r.data.items[pieceId];
             if (!info || info.status === 'ended') return;
 
@@ -353,28 +358,15 @@ jQuery(document).ready(function($) {
             if ($bidInput.length) {
                 $bidInput.attr('data-min', info.min_bid).data('min', info.min_bid);
             }
-
-            // Update cart count
-            var $cartCount = $('.aih-cart-count');
-            if (r.data.cart_count > 0) {
-                if ($cartCount.length) {
-                    $cartCount.text(r.data.cart_count);
-                } else {
-                    var checkoutUrl = aihAjax.checkoutUrl;
-                    if (checkoutUrl) {
-                        $('.aih-header-actions .aih-theme-toggle').after(
-                            '<a href="' + checkoutUrl + '" class="aih-cart-link"><span>&#128722;</span><span class="aih-cart-count">' + r.data.cart_count + '</span></a>'
-                        );
-                    }
-                }
-            }
+        }).fail(function() {
+            // Network error or server error — polling continues via setTimeout chain
         });
     }
 
     function startPolling() {
-        if (pollTimer) clearInterval(pollTimer);
+        if (pollTimer) clearTimeout(pollTimer);
         var interval = document.hidden ? 60000 : getSmartInterval();
-        pollTimer = setInterval(function() {
+        pollTimer = setTimeout(function() {
             pollStatus();
             startPolling();
         }, interval);
@@ -382,7 +374,7 @@ jQuery(document).ready(function($) {
 
     function stopPolling() {
         if (pollTimer) {
-            clearInterval(pollTimer);
+            clearTimeout(pollTimer);
             pollTimer = null;
         }
     }
@@ -397,7 +389,7 @@ jQuery(document).ready(function($) {
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             stopPolling();
-            if (!isEnded) pollTimer = setInterval(pollStatus, 60000);
+            if (!isEnded) pollTimer = setTimeout(pollStatus, 60000);
         } else if (!isEnded) {
             stopPolling();
             pollStatus();

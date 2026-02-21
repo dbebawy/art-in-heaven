@@ -271,18 +271,15 @@ class AIH_Bid {
                     END as computed_status
              FROM {$this->table} b
              JOIN $art_table a ON b.art_piece_id = a.id
-             INNER JOIN (
-                 SELECT art_piece_id, MAX(bid_amount) as max_bid
-                 FROM {$this->table}
-                 WHERE bidder_id = %s AND bid_status = 'valid'
-                 GROUP BY art_piece_id
-             ) max_bids ON b.art_piece_id = max_bids.art_piece_id
-                       AND b.bid_amount = max_bids.max_bid
-                       AND b.bidder_id = %s
              WHERE b.bidder_id = %s AND b.bid_status = 'valid'
-             GROUP BY b.art_piece_id
+               AND b.id = (
+                   SELECT b2.id FROM {$this->table} b2
+                   WHERE b2.art_piece_id = b.art_piece_id AND b2.bidder_id = %s AND b2.bid_status = 'valid'
+                   ORDER BY b2.bid_amount DESC, b2.id DESC
+                   LIMIT 1
+               )
              ORDER BY b.bid_time DESC",
-            $bidder_id, $now, $now, $now, $now, $bidder_id, $bidder_id, $bidder_id
+            $bidder_id, $now, $now, $now, $now, $bidder_id, $bidder_id
         ));
     }
     

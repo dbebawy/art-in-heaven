@@ -184,8 +184,8 @@ $bidder_bid_ids = $bid_model->get_bidder_bid_ids_batch($piece_ids, $bidder_id);
                     $is_ended = false;
                 } else {
                     // Fallback: calculate from status and dates
-                    $is_ended = $piece->status === 'ended' || (!empty($piece->auction_end) && strtotime($piece->auction_end) && strtotime($piece->auction_end) <= time());
-                    $is_upcoming = !$is_ended && !empty($piece->auction_start) && strtotime($piece->auction_start) && strtotime($piece->auction_start) > time();
+                    $is_ended = $piece->status === 'ended' || (!empty($piece->auction_end) && strtotime($piece->auction_end) && strtotime($piece->auction_end) <= current_time('timestamp'));
+                    $is_upcoming = !$is_ended && !empty($piece->auction_start) && strtotime($piece->auction_start) && strtotime($piece->auction_start) > current_time('timestamp');
                 }
 
                 $status_class = '';

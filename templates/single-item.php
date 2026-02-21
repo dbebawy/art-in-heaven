@@ -48,8 +48,8 @@ if ($computed_status === 'ended') {
     $is_ended = false;
 } else {
     // Fallback: calculate from status and dates
-    $is_ended = $art_piece->status === 'ended' || (!empty($art_piece->auction_end) && strtotime($art_piece->auction_end) && strtotime($art_piece->auction_end) <= time());
-    $is_upcoming = !$is_ended && !empty($art_piece->auction_start) && strtotime($art_piece->auction_start) && strtotime($art_piece->auction_start) > time();
+    $is_ended = $art_piece->status === 'ended' || (!empty($art_piece->auction_end) && strtotime($art_piece->auction_end) && strtotime($art_piece->auction_end) <= current_time('timestamp'));
+    $is_upcoming = !$is_ended && !empty($art_piece->auction_start) && strtotime($art_piece->auction_start) && strtotime($art_piece->auction_start) > current_time('timestamp');
 }
 
 $images = $art_images->get_images($art_piece->id);
