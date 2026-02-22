@@ -320,7 +320,7 @@ jQuery(document).ready(function($) {
         var endMs = new Date($timeEl.attr('data-end').replace(/-/g, '/')).getTime();
         var remaining = endMs - (Date.now() + timeOffset);
         if (remaining <= 0) return 30000;
-        if (remaining < 60000) return 3000;
+        if (remaining < 60000) return 2000;
         if (remaining < 300000) return 5000;
         if (remaining < 3600000) return 10000;
         return 30000;

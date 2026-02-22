@@ -26,6 +26,9 @@
 
             var self = this;
 
+            // Always start polling as a safety net — push may fail silently
+            self.startPolling();
+
             navigator.serviceWorker.register(aihAjax.swUrl, { scope: '/' })
                 .then(function(registration) {
                     self.swRegistration = registration;
@@ -35,13 +38,10 @@
                     if (subscription) {
                         self.pushSubscribed = true;
                         self.syncSubscription(subscription);
-                    } else {
-                        // No subscription yet — start polling until user grants permission
-                        self.startPolling();
                     }
                 })
                 .catch(function() {
-                    self.startPolling();
+                    // Service worker failed — polling already running
                 });
         },
 
@@ -86,12 +86,7 @@
             .then(function(subscription) {
                 self.pushSubscribed = true;
                 self.syncSubscription(subscription);
-
-                // Stop polling — push is active
-                if (self.pollTimer) {
-                    clearTimeout(self.pollTimer);
-                    self.pollTimer = null;
-                }
+                // Polling continues as safety net
             })
             .catch(function() {
                 // Permission denied or error — polling continues
@@ -140,7 +135,7 @@
                 if (remaining > 0 && remaining < soonest) soonest = remaining;
             }
 
-            if (soonest < 60000) return 3000;       // < 1 min: every 3s
+            if (soonest < 60000) return 2000;       // < 1 min: every 2s
             if (soonest < 300000) return 5000;       // < 5 min: every 5s
             if (soonest < 3600000) return 10000;     // < 1 hour: every 10s
             return 30000;                             // > 1 hour: every 30s
@@ -215,7 +210,6 @@
 
     // Pause/resume polling on tab visibility change
     document.addEventListener('visibilitychange', function() {
-        if (!AIHPush.pollTimer) return; // not polling (push is active)
         if (document.hidden) {
             AIHPush.stopPolling();
             AIHPush.pollTimer = setTimeout(function() {

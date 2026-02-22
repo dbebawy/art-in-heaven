@@ -291,7 +291,7 @@ class AIH_Push {
             'time'         => time(),
         );
 
-        set_transient($key, $events, 5 * MINUTE_IN_SECONDS);
+        set_transient($key, $events, 30 * MINUTE_IN_SECONDS);
     }
 
     /**

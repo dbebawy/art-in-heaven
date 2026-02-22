@@ -435,7 +435,7 @@ jQuery(document).ready(function($) {
             if (remaining > 0 && remaining < soonest) soonest = remaining;
         });
 
-        if (soonest < 60000) return 3000;       // < 1 min: poll every 3s
+        if (soonest < 60000) return 2000;       // < 1 min: poll every 2s
         if (soonest < 300000) return 5000;       // < 5 min: poll every 5s
         if (soonest < 3600000) return 10000;     // < 1 hour: poll every 10s
         return 30000;                             // > 1 hour: poll every 30s
