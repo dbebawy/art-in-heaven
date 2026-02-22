@@ -4324,6 +4324,93 @@ html.aih-lightbox-open body {
     margin-top: 16px;
 }
 
+/* --- Checkout Item Selection --- */
+
+.aih-checkout-items-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.aih-checkout-items-header .aih-section-heading {
+    margin-bottom: 0;
+}
+
+.aih-select-toggle {
+    font-size: 13px;
+    color: var(--color-accent);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-family: var(--font-display);
+    transition: opacity 0.2s;
+}
+
+.aih-select-toggle:hover {
+    opacity: 0.7;
+}
+
+.aih-checkout-checkbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    cursor: pointer;
+    align-self: center;
+}
+
+.aih-checkout-checkbox input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.aih-checkmark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: var(--color-surface);
+}
+
+.aih-checkout-checkbox input:checked ~ .aih-checkmark {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.aih-checkmark::after {
+    content: '';
+    display: none;
+    width: 6px;
+    height: 11px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.aih-checkout-checkbox input:checked ~ .aih-checkmark::after {
+    display: block;
+}
+
+.aih-checkout-item.deselected {
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.aih-checkout-item {
+    transition: opacity 0.2s;
+}
+
 /* --- Checkout Media Queries --- */
 
 @media (max-width: 900px) {
@@ -4346,6 +4433,14 @@ html.aih-lightbox-open body {
     .aih-checkout-item {
         flex-direction: column;
         padding: 16px;
+        position: relative;
+    }
+
+    .aih-checkout-checkbox {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
     }
 
     .aih-checkout-item-image {

@@ -314,7 +314,11 @@ class AIH_Ajax {
             wp_send_json_error(array('message' => __('Too many order attempts. Please wait.', 'art-in-heaven')));
         }
 
-        $result = AIH_Checkout::get_instance()->create_order($auth->get_current_bidder_id());
+        $art_piece_ids = isset($_POST['art_piece_ids']) ? array_map('intval', (array) $_POST['art_piece_ids']) : array();
+        if (empty($art_piece_ids)) {
+            wp_send_json_error(array('message' => __('Please select at least one item to pay for.', 'art-in-heaven')));
+        }
+        $result = AIH_Checkout::get_instance()->create_order($auth->get_current_bidder_id(), $art_piece_ids);
         if ($result['success']) {
             AIH_Database::log_audit('order_created', array(
                 'object_type' => 'order',
