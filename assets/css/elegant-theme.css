@@ -2646,10 +2646,10 @@ body {
    DARK MODE - Hardcoded Color Overrides
    ============================================ */
 
-/* Body background when dark mode is active */
-.aih-page.dark-mode ~ script,
-html:has(.aih-page.dark-mode) body {
+/* Dark mode background scoped to plugin wrapper only */
+.aih-page.dark-mode {
     background: #121212 !important;
+    min-height: 100vh;
 }
 
 /* Scrollbar */
