@@ -11,13 +11,11 @@ if (!defined('ABSPATH')) {
 }
 
 class AIH_Bid {
-    
+
     private $table;
-    private $art_piece_model;
-    
+
     public function __construct() {
         $this->table = AIH_Database::get_table('bids');
-        $this->art_piece_model = new AIH_Art_Piece();
     }
     
     /**
@@ -390,10 +388,10 @@ class AIH_Bid {
 
             // If this was the winning bid, update the winning status
             if ($bid->is_winning) {
-                // Find the next highest bid
+                // Find the next highest valid bid
                 $next_highest = $wpdb->get_row($wpdb->prepare(
                     "SELECT * FROM {$this->table}
-                     WHERE art_piece_id = %d
+                     WHERE art_piece_id = %d AND bid_status = 'valid'
                      ORDER BY bid_amount DESC
                      LIMIT 1",
                     $bid->art_piece_id
