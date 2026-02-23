@@ -3354,6 +3354,10 @@ body {
     border-color: var(--color-error);
 }
 
+.aih-card.winning {
+    border-color: var(--color-success);
+}
+
 /* ============================================
    PULL-TO-REFRESH INDICATOR
    ============================================ */
