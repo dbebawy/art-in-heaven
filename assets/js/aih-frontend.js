@@ -17,19 +17,28 @@
     // Tries /api/ route first, falls back to admin-ajax.php on network failure
     window.aihPost = function(endpoint, data, successFn, failFn, opts) {
         opts = opts || {};
-        return $.post(aihApiUrl(endpoint), data, successFn).fail(function(jqXHR) {
-            // For mutating operations (bids): if the server returned 200 the bid likely
-            // went through but the response failed to parse — do NOT retry.
-            // For any other status (0=network error, 404=route missing, 500=server error)
-            // it's safe to fall back to admin-ajax.
-            if (opts.mutating && jqXHR.status === 200) {
-                console.warn('[AIH] API route returned 200 for "' + endpoint + '" but response failed — not retrying mutating request');
-                if (typeof failFn === 'function') failFn();
-                return;
+        var apiUrl = aihApiUrl(endpoint);
+        return $.post(apiUrl, data, successFn).fail(function(jqXHR, textStatus) {
+            // If server returned 200 but jQuery couldn't parse JSON (parsererror),
+            // try to salvage the JSON from the response (PHP notices may precede it).
+            if (jqXHR.status === 200 && textStatus === 'parsererror') {
+                var text = jqXHR.responseText || '';
+                var jsonStart = text.indexOf('{"success"');
+                if (jsonStart !== -1) {
+                    try {
+                        var parsed = JSON.parse(text.substring(jsonStart));
+                        if (typeof successFn === 'function') successFn(parsed);
+                        return;
+                    } catch(e) { /* fall through */ }
+                }
+                // For mutating operations, don't retry — bid likely went through
+                if (opts.mutating) {
+                    if (typeof failFn === 'function') failFn();
+                    return;
+                }
             }
-            console.warn('[AIH] API route failed for "' + endpoint + '" (status ' + jqXHR.status + '), using admin-ajax fallback');
+            // Fall back to admin-ajax
             $.post(aihAjax.ajaxurl, data, successFn).fail(function() {
-                console.error('[AIH] admin-ajax fallback also failed for "' + endpoint + '"');
                 if (typeof failFn === 'function') failFn();
             });
         });

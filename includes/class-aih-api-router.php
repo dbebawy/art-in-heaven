@@ -155,6 +155,24 @@ class AIH_API_Router {
         $_POST['action'] = $wp_action;
         $_REQUEST['action'] = $wp_action;
 
+        // Suppress PHP notices/warnings from corrupting the JSON response.
+        // Errors are still logged via error_log().
+        @ini_set('display_errors', '0');
+
+        // Capture any stray PHP output (notices, warnings) that might precede JSON.
+        // The ob_start callback strips everything before the JSON opening brace.
+        ob_start(function($buffer) {
+            $trimmed = ltrim($buffer);
+            if ($trimmed !== '' && $trimmed[0] === '{') {
+                return $trimmed;
+            }
+            $pos = strpos($buffer, '{"success"');
+            if ($pos !== false) {
+                return substr($buffer, $pos);
+            }
+            return $buffer;
+        });
+
         // Delegate to AIH_Ajax handler
         $ajax = AIH_Ajax::get_instance();
         $method = self::ROUTE_MAP[$action];
