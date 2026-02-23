@@ -178,9 +178,11 @@
          * Handle outbid notification (private topic)
          */
         handleOutbid: function(data) {
-            var msg = 'You\'ve been outbid on "' + (data.title || 'an item') + '"!';
-            if (typeof window.showToast === 'function') {
-                window.showToast(msg, 'error');
+            var title = data.title || 'an item';
+            if (typeof window.showOutbidAlert === 'function') {
+                window.showOutbidAlert(data.art_piece_id, title);
+            } else if (typeof window.showToast === 'function') {
+                window.showToast('You\'ve been outbid on "' + title + '"!', 'error');
             }
             // Trigger immediate status poll to update badges
             if (typeof window.aihPollStatus === 'function') {

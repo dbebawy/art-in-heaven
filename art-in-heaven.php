@@ -511,6 +511,7 @@ class Art_In_Heaven {
             'swUrl'          => home_url('/?aih-sw=1'),
             'checkoutUrl'    => AIH_Template_Helper::get_checkout_url(),
             'bidIncrement'   => floatval(get_option('aih_bid_increment', 1)),
+            'galleryUrl'     => AIH_Template_Helper::get_gallery_url(),
         );
 
         // Mercure SSE: add hub URL and set subscriber JWT cookie
