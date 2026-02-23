@@ -197,7 +197,7 @@ jQuery(document).ready(function($) {
         $btn.prop('disabled', true).addClass('loading');
         $msg.hide().removeClass('error success');
 
-        $.post(aihApiUrl('bid'), {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:$btn.data('id'), bid_amount:amount}, function(r) {
+        aihPost('bid', {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:$btn.data('id'), bid_amount:amount}, function(r) {
             if (r.success) {
                 if (navigator.vibrate) navigator.vibrate(100);
                 bidJustPlaced = true;
@@ -215,7 +215,7 @@ jQuery(document).ready(function($) {
             }
             bidInProgress = false;
             $btn.prop('disabled', false).removeClass('loading');
-        }).fail(function() {
+        }, function() {
             $msg.removeClass('success').addClass('error').text(aihAjax.strings.connectionError).show();
             bidInProgress = false;
             $btn.prop('disabled', false).removeClass('loading');

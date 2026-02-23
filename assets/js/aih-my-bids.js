@@ -113,7 +113,7 @@ jQuery(document).ready(function($) {
             $btn.prop('disabled', true).text('...');
             $msg.hide();
 
-            $.post(aihApiUrl('bid'), {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
+            aihPost('bid', {action:'aih_place_bid', nonce:aihAjax.nonce, art_piece_id:id, bid_amount:amount}, function(r) {
                 if (r.success) {
                     if (navigator.vibrate) navigator.vibrate(100);
                     $msg.removeClass('error').addClass('success').text(aihAjax.strings.bidPlaced).show();
@@ -124,7 +124,7 @@ jQuery(document).ready(function($) {
                     bidInProgress = false;
                     $btn.prop('disabled', false).text('Bid');
                 }
-            }).fail(function() {
+            }, function() {
                 $msg.removeClass('success').addClass('error').text(aihAjax.strings.connectionError).show();
                 bidInProgress = false;
                 $btn.prop('disabled', false).text('Bid');

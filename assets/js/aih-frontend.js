@@ -302,7 +302,7 @@
         if (bidInProgress) return;
         bidInProgress = true;
         var data = {action: 'aih_place_bid', nonce: aihAjax.nonce, art_piece_id: artId, bid_amount: bidAmount};
-        $.post(aihApiUrl('bid'), data, function(response) {
+        aihPost('bid', data, function(response) {
                 bidInProgress = false;
                 if (response.success) {
                     if (navigator.vibrate) navigator.vibrate(100);
@@ -341,7 +341,7 @@
                     $notice.addClass('error').text(message).show();
                     showToast(message, 'error');
                 }
-        }).fail(function() {
+        }, function() {
                 bidInProgress = false;
                 $notice.addClass('error').text(aihAjax.strings.bidError).show();
                 showToast(aihAjax.strings.bidError, 'error');
