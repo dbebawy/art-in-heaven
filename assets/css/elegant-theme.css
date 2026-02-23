@@ -1911,11 +1911,12 @@ body.filter-open {
 .aih-user-name-link {
     color: var(--color-secondary);
     text-decoration: none;
-    transition: color var(--transition);
+    transition: all var(--transition);
 }
 
 .aih-user-name-link:hover {
     color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 /* ============================================
