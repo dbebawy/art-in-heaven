@@ -312,9 +312,9 @@
                     // Update card if visible
                     updateCardWinningStatus(artId, true);
 
-                    // Prompt for push notification permission after first bid
-                    if (window.AIHPush && !window.AIHPush.pushSubscribed) {
-                        setTimeout(function() { window.AIHPush.requestPermission(); }, 2000);
+                    // Prompt for push notification permission after bid (if not yet asked)
+                    if (window.AIHPush) {
+                        window.AIHPush.promptAfterBid();
                     }
 
                 } else {
@@ -473,6 +473,120 @@
 
     // Expose showToast for push notification fallback
     window.showToast = showToast;
+
+    // =============================================
+    // PERSISTENT OUTBID ALERTS (Layer 2)
+    // =============================================
+    (function initOutbidAlerts() {
+        var MAX_VISIBLE = 3;
+        var EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+        var alertCount = 0;
+
+        // Inject alert container below header
+        var $container = $('<div id="aih-alert-container" class="aih-alert-container"></div>');
+        $('.aih-header').first().after($container);
+
+        /**
+         * Show a persistent outbid alert card.
+         * Same art_piece_id replaces previous alert for that piece.
+         *
+         * @param {number|string} artPieceId
+         * @param {string} title - Art piece title
+         * @param {string} [url] - Optional link to the piece
+         */
+        function showOutbidAlert(artPieceId, title, url) {
+            var $existing = $container.find('.aih-alert-card[data-art-id="' + artPieceId + '"]');
+            if ($existing.length) {
+                // Replace: update text, reset expiry timer
+                $existing.find('.aih-alert-text').text('You\'ve been outbid on "' + title + '"!');
+                clearTimeout($existing.data('expiryTimer'));
+                setExpiry($existing);
+                // Flash to draw attention
+                $existing.removeClass('aih-alert-flash');
+                setTimeout(function() { $existing.addClass('aih-alert-flash'); }, 10);
+                return;
+            }
+
+            // Collapse oldest if at max
+            var $cards = $container.find('.aih-alert-card');
+            if ($cards.length >= MAX_VISIBLE) {
+                var $oldest = $cards.first();
+                removeAlert($oldest);
+            }
+
+            // Build alert card
+            var viewUrl = url || '';
+            if (!viewUrl && aihAjax.galleryUrl) {
+                viewUrl = aihAjax.galleryUrl + '?art_id=' + artPieceId;
+            }
+
+            var $alert = $(
+                '<div class="aih-alert-card" data-art-id="' + artPieceId + '">' +
+                    '<div class="aih-alert-icon">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+                    '</div>' +
+                    '<span class="aih-alert-text">You\'ve been outbid on "' + $('<span>').text(title).html() + '"!</span>' +
+                    (viewUrl ? '<a href="' + viewUrl + '" class="aih-alert-view">View</a>' : '') +
+                    '<button type="button" class="aih-alert-dismiss" aria-label="Dismiss">&times;</button>' +
+                '</div>'
+            );
+
+            $alert.find('.aih-alert-dismiss').on('click', function() {
+                removeAlert($alert);
+            });
+
+            setExpiry($alert);
+            $container.append($alert);
+
+            // Animate in
+            setTimeout(function() { $alert.addClass('aih-alert-show'); }, 10);
+
+            alertCount++;
+            updateBellBadge();
+        }
+
+        function setExpiry($alert) {
+            var timer = setTimeout(function() {
+                removeAlert($alert);
+            }, EXPIRY_MS);
+            $alert.data('expiryTimer', timer);
+        }
+
+        function removeAlert($alert) {
+            clearTimeout($alert.data('expiryTimer'));
+            $alert.removeClass('aih-alert-show');
+            setTimeout(function() {
+                $alert.remove();
+                // Don't decrement below 0
+                if (alertCount > 0) alertCount--;
+                updateBellBadge();
+            }, 300);
+        }
+
+        /**
+         * Update bell button badge with unread alert count
+         */
+        function updateBellBadge() {
+            var $btn = $('#aih-notify-btn');
+            if (!$btn.length) return;
+
+            var $badge = $btn.find('.aih-notify-badge');
+            var count = $container.find('.aih-alert-card').length;
+
+            if (count > 0) {
+                if (!$badge.length) {
+                    $badge = $('<span class="aih-notify-badge"></span>');
+                    $btn.append($badge);
+                }
+                $badge.text(count > 9 ? '9+' : count);
+            } else {
+                $badge.remove();
+            }
+        }
+
+        // Expose globally
+        window.showOutbidAlert = showOutbidAlert;
+    })();
 
     // =============================================
     // CONFIRM BID MODAL (replaces native confirm())

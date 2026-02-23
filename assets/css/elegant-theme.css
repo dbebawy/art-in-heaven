@@ -2930,6 +2930,231 @@ body {
 }
 
 /* ============================================
+   NOTIFICATION BELL BUTTON
+   ============================================ */
+.aih-notify-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--color-muted);
+    transition: all var(--transition);
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    position: relative;
+}
+
+.aih-notify-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-primary);
+}
+
+.aih-notify-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* Default state: show bell, hide bell-off */
+.aih-icon-bell { display: block; }
+.aih-icon-bell-off { display: none; }
+
+/* Granted: accent color bell */
+.aih-notify-granted {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.aih-notify-granted:hover {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+/* Denied: show bell-off icon */
+.aih-notify-denied .aih-icon-bell { display: none; }
+.aih-notify-denied .aih-icon-bell-off { display: block; }
+.aih-notify-denied {
+    color: var(--color-muted);
+    opacity: 0.6;
+}
+
+/* Unsupported: hide completely */
+.aih-notify-unsupported {
+    display: none !important;
+}
+
+/* Default (not yet asked): subtle pulse animation on the dot */
+.aih-notify-default::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    animation: aih-notify-pulse 2s ease-in-out infinite;
+}
+
+@keyframes aih-notify-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Label — hidden on mobile, shown at 600px+ */
+.aih-notify-label {
+    display: none;
+}
+
+@media (min-width: 600px) {
+    .aih-notify-btn {
+        padding: 6px 10px;
+    }
+
+    .aih-notify-label {
+        display: inline;
+    }
+
+    .aih-notify-default::after {
+        top: 4px;
+        right: 4px;
+    }
+}
+
+/* ============================================
+   NOTIFICATION BELL BADGE
+   ============================================ */
+.aih-notify-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e53e3e;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    pointer-events: none;
+}
+
+/* ============================================
+   PERSISTENT OUTBID ALERT CARDS (Layer 2)
+   ============================================ */
+.aih-alert-container {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 0;
+    width: 100%;
+    max-width: 480px;
+    pointer-events: none;
+}
+
+.aih-alert-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--color-surface, #fff);
+    border: 1px solid #e53e3e;
+    border-left: 4px solid #e53e3e;
+    border-radius: var(--radius, 8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    font-family: var(--font-body, 'Inter', -apple-system, sans-serif);
+    font-size: 13px;
+    color: var(--color-primary, #1a1a2e);
+}
+
+.aih-alert-card.aih-alert-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.aih-alert-icon {
+    flex-shrink: 0;
+    color: #e53e3e;
+    display: flex;
+    align-items: center;
+}
+
+.aih-alert-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.aih-alert-view {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    background: var(--color-accent, #c9a96e);
+    color: #fff;
+    text-decoration: none;
+    border-radius: var(--radius, 8px);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: opacity var(--transition, 0.2s);
+}
+
+.aih-alert-view:hover {
+    opacity: 0.85;
+}
+
+.aih-alert-dismiss {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--color-muted, #999);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color var(--transition, 0.2s);
+}
+
+.aih-alert-dismiss:hover {
+    color: var(--color-primary, #1a1a2e);
+}
+
+/* Flash animation for replacement */
+.aih-alert-flash {
+    animation: aih-alert-flash 0.5s ease;
+}
+
+@keyframes aih-alert-flash {
+    0%, 100% { border-color: #e53e3e; }
+    50% { border-color: var(--color-accent, #c9a96e); background: rgba(201, 169, 110, 0.05); }
+}
+
+/* Dark mode adjustments */
+.aih-page.dark-mode .aih-alert-card {
+    background: var(--color-surface, #1e1e2e);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
    DARK MODE - Smooth Transition (added via JS after load)
    ============================================ */
 .aih-page.dark-mode-transition,

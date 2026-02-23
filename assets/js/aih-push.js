@@ -2,7 +2,7 @@
  * Art in Heaven - Push Notification Manager
  *
  * Handles push subscription, permission prompts, and polling fallback
- * for outbid notifications.
+ * for outbid notifications. Manages the header bell button state.
  */
 
 (function($) {
@@ -10,6 +10,8 @@
 
     // Only activate for logged-in bidders
     if (!window.aihAjax || !aihAjax.isLoggedIn || !aihAjax.bidderId) {
+        // Hide bell button for logged-out users
+        $('#aih-notify-btn').hide();
         return;
     }
 
@@ -18,14 +20,30 @@
         pollTimer: null,
         swRegistration: null,
         shownEvents: {},
+        bellBtn: null,
 
         init: function() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            this.bellBtn = document.getElementById('aih-notify-btn');
+
+            // Bind bell button click
+            if (this.bellBtn) {
+                var self = this;
+                this.bellBtn.addEventListener('click', function() {
+                    self.handleBellClick();
+                });
+            }
+
+            // Check if push is supported
+            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                this.updateBellState('unsupported');
                 this.startPolling();
                 return;
             }
 
             var self = this;
+
+            // Update bell to current permission state immediately
+            this.updateBellState(Notification.permission);
 
             // Always start polling as a safety net — push may fail silently
             self.startPolling();
@@ -39,6 +57,10 @@
                     if (subscription) {
                         self.pushSubscribed = true;
                         self.syncSubscription(subscription);
+                        self.updateBellState('granted');
+                    } else if (Notification.permission === 'granted') {
+                        // Permission granted but not subscribed — re-subscribe
+                        self.subscribe();
                     }
                 })
                 .catch(function() {
@@ -46,9 +68,83 @@
                 });
         },
 
+        // ========== BELL BUTTON STATE ==========
+
+        /**
+         * Update the header bell button appearance.
+         * States: 'default', 'granted', 'denied', 'unsupported'
+         */
+        updateBellState: function(state) {
+            if (!this.bellBtn) return;
+
+            this.bellBtn.classList.remove(
+                'aih-notify-default',
+                'aih-notify-granted',
+                'aih-notify-denied',
+                'aih-notify-unsupported'
+            );
+
+            switch (state) {
+                case 'granted':
+                    this.bellBtn.classList.add('aih-notify-granted');
+                    this.bellBtn.title = aihAjax.strings.notifyEnabled || 'Notifications enabled';
+                    break;
+                case 'denied':
+                    this.bellBtn.classList.add('aih-notify-denied');
+                    this.bellBtn.title = aihAjax.strings.notifyDenied || 'Notifications blocked — check browser settings';
+                    break;
+                case 'unsupported':
+                    this.bellBtn.classList.add('aih-notify-unsupported');
+                    this.bellBtn.title = aihAjax.strings.notifyUnsupported || 'Notifications not supported';
+                    break;
+                default:
+                    this.bellBtn.classList.add('aih-notify-default');
+                    this.bellBtn.title = aihAjax.strings.notifyEnable || 'Enable notifications';
+                    break;
+            }
+        },
+
+        /**
+         * Handle bell button click
+         */
+        handleBellClick: function() {
+            if (!('Notification' in window) || !('PushManager' in window)) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Your browser does not support push notifications.', 'error');
+                }
+                return;
+            }
+
+            var permission = Notification.permission;
+
+            if (permission === 'granted') {
+                if (this.pushSubscribed) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Notifications are already enabled!', 'success');
+                    }
+                } else {
+                    // Granted but not subscribed — try subscribing
+                    this.subscribe();
+                }
+                return;
+            }
+
+            if (permission === 'denied') {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Notifications are blocked. Please enable them in your browser settings.', 'error');
+                }
+                return;
+            }
+
+            // permission === 'default' — request it
+            this.requestPermission();
+        },
+
+        // ========== PERMISSION & SUBSCRIPTION ==========
+
         /**
          * Request notification permission and subscribe.
-         * Called after first successful bid (with a 2s delay).
+         * Called from: bell button click, after bid.
          */
         requestPermission: function() {
             if (this.pushSubscribed) {
@@ -62,11 +158,29 @@
             var self = this;
 
             Notification.requestPermission().then(function(permission) {
+                self.updateBellState(permission);
+
                 if (permission === 'granted') {
                     self.subscribe();
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Notifications enabled! You\'ll be alerted when outbid.', 'success');
+                    }
                 }
                 // If denied, polling is already running
             });
+        },
+
+        /**
+         * Called after a successful bid to prompt if permission is still default.
+         */
+        promptAfterBid: function() {
+            if (this.pushSubscribed) return;
+            if (!('Notification' in window)) return;
+            if (Notification.permission !== 'default') return;
+            if (!this.swRegistration) return;
+
+            var self = this;
+            setTimeout(function() { self.requestPermission(); }, 2000);
         },
 
         /**
@@ -87,10 +201,12 @@
             .then(function(subscription) {
                 self.pushSubscribed = true;
                 self.syncSubscription(subscription);
+                self.updateBellState('granted');
                 // Polling continues as safety net
             })
             .catch(function() {
                 // Permission denied or error — polling continues
+                self.updateBellState(Notification.permission);
             });
         },
 
@@ -113,6 +229,8 @@
                 }
             });
         },
+
+        // ========== POLLING FALLBACK ==========
 
         /**
          * Smart polling interval based on soonest-ending auction.
@@ -159,12 +277,15 @@
                     if (response.success && response.data && response.data.length > 0) {
                         for (var i = 0; i < response.data.length; i++) {
                             var evt = response.data[i];
+                            // Dedup: skip events already shown this session
                             var eventKey = evt.art_piece_id + '_' + evt.time;
                             if (self.shownEvents[eventKey]) continue;
                             self.shownEvents[eventKey] = true;
-                            var msg = 'You\'ve been outbid on "' + evt.title + '"!';
-                            if (typeof window.showToast === 'function') {
-                                window.showToast(msg, 'error');
+                            // Show persistent alert card (falls back to toast)
+                            if (typeof window.showOutbidAlert === 'function') {
+                                window.showOutbidAlert(evt.art_piece_id, evt.title);
+                            } else if (typeof window.showToast === 'function') {
+                                window.showToast('You\'ve been outbid on "' + evt.title + '"!', 'error');
                             }
                         }
                         // Trigger immediate status poll to update badges
@@ -227,7 +348,7 @@
         }
     });
 
-    // Expose for external triggering (e.g. after first bid)
+    // Expose for external triggering (e.g. after bid, from other scripts)
     window.AIHPush = AIHPush;
 
 })(jQuery);
