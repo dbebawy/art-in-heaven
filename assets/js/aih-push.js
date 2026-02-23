@@ -17,6 +17,7 @@
         pushSubscribed: false,
         pollTimer: null,
         swRegistration: null,
+        shownEvents: {},
 
         init: function() {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -157,6 +158,9 @@
                     if (response.success && response.data && response.data.length > 0) {
                         for (var i = 0; i < response.data.length; i++) {
                             var evt = response.data[i];
+                            var eventKey = evt.art_piece_id + '_' + evt.time;
+                            if (self.shownEvents[eventKey]) continue;
+                            self.shownEvents[eventKey] = true;
                             var msg = 'You\'ve been outbid on "' + evt.title + '"!';
                             if (typeof window.showToast === 'function') {
                                 window.showToast(msg, 'error');
