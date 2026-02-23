@@ -232,9 +232,19 @@ class AIH_Ajax {
     public function get_gallery() {
         check_ajax_referer('aih_nonce', 'nonce');
         $auth = AIH_Auth::get_instance();
-        $pieces = (new AIH_Art_Piece())->get_all(array('status' => 'active', 'bidder_id' => $auth->get_current_bidder_id()));
+        $bidder_id = $auth->get_current_bidder_id();
+        $pieces = (new AIH_Art_Piece())->get_all(array('status' => 'active', 'bidder_id' => $bidder_id));
+
+        // Batch-fetch winning IDs to avoid N+1 queries
+        $batch_data = null;
+        if ($bidder_id && !empty($pieces)) {
+            $piece_ids = array_map(function($p) { return intval($p->id); }, $pieces);
+            $bid_model = new AIH_Bid();
+            $batch_data = array('winning_ids' => $bid_model->get_winning_ids_batch($piece_ids, $bidder_id));
+        }
+
         $data = array();
-        foreach ($pieces as $p) $data[] = $this->format_art_piece($p, $auth->get_current_bidder_id());
+        foreach ($pieces as $p) $data[] = $this->format_art_piece($p, $bidder_id, false, $batch_data);
         wp_send_json_success($data);
     }
 
@@ -277,9 +287,19 @@ class AIH_Ajax {
         if (strlen($search) < 2) wp_send_json_success(array());
 
         $auth = AIH_Auth::get_instance();
-        $results = (new AIH_Art_Piece())->get_all(array('search' => $search, 'status' => 'active', 'bidder_id' => $auth->get_current_bidder_id(), 'limit' => 20));
+        $bidder_id = $auth->get_current_bidder_id();
+        $results = (new AIH_Art_Piece())->get_all(array('search' => $search, 'status' => 'active', 'bidder_id' => $bidder_id, 'limit' => 20));
+
+        // Batch-fetch winning IDs to avoid N+1 queries
+        $batch_data = null;
+        if ($bidder_id && !empty($results)) {
+            $piece_ids = array_map(function($p) { return intval($p->id); }, $results);
+            $bid_model = new AIH_Bid();
+            $batch_data = array('winning_ids' => $bid_model->get_winning_ids_batch($piece_ids, $bidder_id));
+        }
+
         $data = array();
-        foreach ($results as $p) $data[] = $this->format_art_piece($p, $auth->get_current_bidder_id());
+        foreach ($results as $p) $data[] = $this->format_art_piece($p, $bidder_id, false, $batch_data);
         wp_send_json_success($data);
     }
 
@@ -314,7 +334,11 @@ class AIH_Ajax {
             wp_send_json_error(array('message' => __('Too many order attempts. Please wait.', 'art-in-heaven')));
         }
 
-        $result = AIH_Checkout::get_instance()->create_order($auth->get_current_bidder_id());
+        $art_piece_ids = isset($_POST['art_piece_ids']) ? array_map('intval', (array) $_POST['art_piece_ids']) : array();
+        if (empty($art_piece_ids)) {
+            wp_send_json_error(array('message' => __('Please select at least one item to pay for.', 'art-in-heaven')));
+        }
+        $result = AIH_Checkout::get_instance()->create_order($auth->get_current_bidder_id(), $art_piece_ids);
         if ($result['success']) {
             AIH_Database::log_audit('order_created', array(
                 'object_type' => 'order',
@@ -991,7 +1015,7 @@ class AIH_Ajax {
         // If this was the winning bid, set the next highest bid as winning
         if ($was_winning) {
             $next_highest = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM {$bids_table} WHERE art_piece_id = %d ORDER BY bid_amount DESC LIMIT 1",
+                "SELECT * FROM {$bids_table} WHERE art_piece_id = %d AND bid_status = 'valid' ORDER BY bid_amount DESC LIMIT 1",
                 $art_piece_id
             ));
             
@@ -1482,8 +1506,8 @@ class AIH_Ajax {
      * Format art piece for AJAX response
      * Uses consolidated AIH_Template_Helper::format_art_piece()
      */
-    private function format_art_piece($piece, $bidder_id = null, $full = false) {
-        return AIH_Template_Helper::format_art_piece($piece, $bidder_id, $full, true);
+    private function format_art_piece($piece, $bidder_id = null, $full = false, $batch_data = null) {
+        return AIH_Template_Helper::format_art_piece($piece, $bidder_id, $full, true, $batch_data);
     }
     
     // ========== MULTIPLE IMAGES ==========
@@ -1512,12 +1536,12 @@ class AIH_Ajax {
         // Check if table exists, if not create it
         global $wpdb;
         $table = AIH_Database::get_table('art_images');
-        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table}'");
+        $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table));
         if (!$table_exists) {
             // Try to create the table
             AIH_Database::create_tables();
             // Check again
-            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table}'");
+            $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table));
             if (!$table_exists) {
                 wp_send_json_error(array('message' => __('Database table not found. Please go to Settings and click "Recreate Tables".', 'art-in-heaven')));
             }
@@ -1560,12 +1584,12 @@ class AIH_Ajax {
         $image_record_id = intval($_POST['image_record_id'] ?? 0);
         
         if (!$image_record_id) {
-            error_log('AIH Remove Image: Missing image_record_id. POST data: ' . print_r($_POST, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AIH Remove Image: Missing image_record_id');
+            }
             wp_send_json_error(array('message' => __('Missing image ID.', 'art-in-heaven')));
         }
-        
-        error_log('AIH Remove Image: Attempting to remove image record ID: ' . $image_record_id);
-        
+
         // Get art_piece_id before removal for returning updated data
         global $wpdb;
         $images_table = AIH_Database::get_table('art_images');
@@ -1580,8 +1604,6 @@ class AIH_Ajax {
         $result = $images_handler->remove_image($image_record_id);
         
         if ($result) {
-            error_log('AIH Remove Image: Successfully removed image record ID: ' . $image_record_id);
-            
             // Get remaining images for this art piece
             $remaining_images = $images_handler->get_images($art_piece_id);
             
@@ -1600,7 +1622,6 @@ class AIH_Ajax {
                 'reload' => count($remaining_images) == 0 // Suggest reload if no images left
             ));
         } else {
-            error_log('AIH Remove Image: Failed to remove image record ID: ' . $image_record_id);
             wp_send_json_error(array('message' => __('Failed to remove image. It may have already been deleted.', 'art-in-heaven')));
         }
     }

@@ -100,7 +100,12 @@ $total = $subtotal + $tax;
         <?php else: ?>
         <div class="aih-checkout-layout">
             <div class="aih-checkout-items">
-                <h2 class="aih-section-heading"><?php _e('Won Items', 'art-in-heaven'); ?></h2>
+                <div class="aih-checkout-items-header">
+                    <h2 class="aih-section-heading"><?php _e('Won Items', 'art-in-heaven'); ?></h2>
+                    <?php if (count($won_items) > 1): ?>
+                    <a href="#" id="aih-select-toggle" class="aih-select-toggle"><?php _e('Deselect All', 'art-in-heaven'); ?></a>
+                    <?php endif; ?>
+                </div>
                 <?php foreach ($won_items as $item):
                     // Support both id and art_piece_id property names
                     $art_piece_id = isset($item->art_piece_id) ? $item->art_piece_id : (isset($item->id) ? $item->id : 0);
@@ -110,6 +115,10 @@ $total = $subtotal + $tax;
                     $winning_amount = isset($item->winning_bid) ? $item->winning_bid : (isset($item->winning_amount) ? $item->winning_amount : 0);
                 ?>
                 <div class="aih-checkout-item">
+                    <label class="aih-checkout-checkbox">
+                        <input type="checkbox" class="aih-item-check" data-id="<?php echo esc_attr($art_piece_id); ?>" data-amount="<?php echo esc_attr($winning_amount); ?>" checked>
+                        <span class="aih-checkmark"></span>
+                    </label>
                     <div class="aih-checkout-item-image">
                         <?php if ($image_url): ?>
                         <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(isset($item->title) ? $item->title : ''); ?>">
@@ -132,21 +141,21 @@ $total = $subtotal + $tax;
                 <?php endforeach; ?>
             </div>
             
-            <div class="aih-checkout-summary">
+            <div class="aih-checkout-summary" data-tax-rate="<?php echo esc_attr($tax_rate); ?>">
                 <h3><?php _e('Order Summary', 'art-in-heaven'); ?></h3>
                 <div class="aih-summary-row">
                     <span><?php _e('Subtotal', 'art-in-heaven'); ?></span>
-                    <span>$<?php echo number_format($subtotal); ?></span>
+                    <span id="aih-subtotal">$<?php echo number_format($subtotal); ?></span>
                 </div>
-                <?php if ($tax > 0): ?>
+                <?php if ($tax_rate > 0): ?>
                 <div class="aih-summary-row">
                     <span><?php printf(esc_html__('Tax (%s%%)', 'art-in-heaven'), esc_html($tax_rate)); ?></span>
-                    <span>$<?php echo number_format($tax, 2); ?></span>
+                    <span id="aih-tax">$<?php echo number_format($tax, 2); ?></span>
                 </div>
                 <?php endif; ?>
                 <div class="aih-summary-row aih-summary-total">
                     <span><?php _e('Total', 'art-in-heaven'); ?></span>
-                    <span>$<?php echo number_format($total, 2); ?></span>
+                    <span id="aih-total">$<?php echo number_format($total, 2); ?></span>
                 </div>
                 <button type="button" id="aih-create-order" class="aih-btn" style="margin-top: 24px;">
                     <?php _e('Proceed to Payment', 'art-in-heaven'); ?>
@@ -212,9 +221,55 @@ jQuery(document).ready(function($) {
         $.post(aihAjax.ajaxurl, {action:'aih_logout', nonce:aihAjax.nonce}, function() { location.reload(); });
     });
 
+    // Item selection logic
+    var taxRate = parseFloat($('.aih-checkout-summary').data('tax-rate')) || 0;
+
+    function recalcTotals() {
+        var subtotal = 0;
+        var count = 0;
+        $('.aih-item-check').each(function() {
+            var $item = $(this).closest('.aih-checkout-item');
+            if (this.checked) {
+                subtotal += parseFloat($(this).data('amount')) || 0;
+                count++;
+                $item.removeClass('deselected');
+            } else {
+                $item.addClass('deselected');
+            }
+        });
+        var tax = subtotal * (taxRate / 100);
+        var total = subtotal + tax;
+        $('#aih-subtotal').text('$' + subtotal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+        if ($('#aih-tax').length) {
+            $('#aih-tax').text('$' + tax.toFixed(2));
+        }
+        $('#aih-total').text('$' + total.toFixed(2));
+        var $btn = $('#aih-create-order');
+        $btn.prop('disabled', count === 0);
+        // Update toggle text
+        var allCount = $('.aih-item-check').length;
+        if ($('#aih-select-toggle').length) {
+            $('#aih-select-toggle').text(count === allCount ? 'Deselect All' : 'Select All');
+        }
+    }
+
+    $('.aih-item-check').on('change', recalcTotals);
+
+    $('#aih-select-toggle').on('click', function(e) {
+        e.preventDefault();
+        var allChecked = $('.aih-item-check:checked').length === $('.aih-item-check').length;
+        $('.aih-item-check').prop('checked', !allChecked);
+        recalcTotals();
+    });
+
     $('#aih-create-order').on('click', function() {
+        var ids = [];
+        $('.aih-item-check:checked').each(function() {
+            ids.push($(this).data('id'));
+        });
+        if (ids.length === 0) return;
         var $btn = $(this).prop('disabled', true).addClass('loading');
-        $.post(aihAjax.ajaxurl, {action:'aih_create_order', nonce:aihAjax.nonce}, function(r) {
+        $.post(aihAjax.ajaxurl, {action:'aih_create_order', nonce:aihAjax.nonce, 'art_piece_ids[]': ids}, function(r) {
             if (r.success && r.data.pushpay_url) {
                 window.location.href = r.data.pushpay_url;
             } else {
