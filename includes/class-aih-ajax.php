@@ -1584,12 +1584,12 @@ class AIH_Ajax {
         $image_record_id = intval($_POST['image_record_id'] ?? 0);
         
         if (!$image_record_id) {
-            error_log('AIH Remove Image: Missing image_record_id. POST data: ' . print_r($_POST, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AIH Remove Image: Missing image_record_id');
+            }
             wp_send_json_error(array('message' => __('Missing image ID.', 'art-in-heaven')));
         }
-        
-        error_log('AIH Remove Image: Attempting to remove image record ID: ' . $image_record_id);
-        
+
         // Get art_piece_id before removal for returning updated data
         global $wpdb;
         $images_table = AIH_Database::get_table('art_images');
@@ -1604,8 +1604,6 @@ class AIH_Ajax {
         $result = $images_handler->remove_image($image_record_id);
         
         if ($result) {
-            error_log('AIH Remove Image: Successfully removed image record ID: ' . $image_record_id);
-            
             // Get remaining images for this art piece
             $remaining_images = $images_handler->get_images($art_piece_id);
             
@@ -1624,7 +1622,6 @@ class AIH_Ajax {
                 'reload' => count($remaining_images) == 0 // Suggest reload if no images left
             ));
         } else {
-            error_log('AIH Remove Image: Failed to remove image record ID: ' . $image_record_id);
             wp_send_json_error(array('message' => __('Failed to remove image. It may have already been deleted.', 'art-in-heaven')));
         }
     }
