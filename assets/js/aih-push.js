@@ -303,16 +303,12 @@
             var key   = subscription.getKey('p256dh');
             var auth  = subscription.getKey('auth');
 
-            $.ajax({
-                url: aihApiUrl('push-subscribe'),
-                type: 'POST',
-                data: {
-                    action:   'aih_push_subscribe',
-                    nonce:    aihAjax.nonce,
-                    endpoint: subscription.endpoint,
-                    p256dh:   key ? btoa(String.fromCharCode.apply(null, new Uint8Array(key))) : '',
-                    auth:     auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth))) : ''
-                }
+            aihPost('push-subscribe', {
+                action:   'aih_push_subscribe',
+                nonce:    aihAjax.nonce,
+                endpoint: subscription.endpoint,
+                p256dh:   key ? btoa(String.fromCharCode.apply(null, new Uint8Array(key))) : '',
+                auth:     auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth))) : ''
             });
         },
 
@@ -352,32 +348,27 @@
         pollOutbid: function() {
             if (window.aihSSEConnected) return; // SSE handles real-time outbid notifications
             var self = this;
-            $.ajax({
-                url: aihApiUrl('check-outbid'),
-                type: 'POST',
-                data: {
-                    action: 'aih_check_outbid',
-                    nonce:  aihAjax.nonce
-                },
-                success: function(response) {
-                    if (response.success && response.data && response.data.length > 0) {
-                        for (var i = 0; i < response.data.length; i++) {
-                            var evt = response.data[i];
-                            // Dedup: skip events already shown this session
-                            var eventKey = evt.art_piece_id + '_' + evt.time;
-                            if (self.shownEvents[eventKey]) continue;
-                            self.shownEvents[eventKey] = true;
-                            // Show persistent alert card (falls back to toast)
-                            if (typeof window.showOutbidAlert === 'function') {
-                                window.showOutbidAlert(evt.art_piece_id, evt.title);
-                            } else if (typeof window.showToast === 'function') {
-                                window.showToast('You\'ve been outbid on "' + evt.title + '"!', 'error');
-                            }
+            aihPost('check-outbid', {
+                action: 'aih_check_outbid',
+                nonce:  aihAjax.nonce
+            }, function(response) {
+                if (response.success && response.data && response.data.length > 0) {
+                    for (var i = 0; i < response.data.length; i++) {
+                        var evt = response.data[i];
+                        // Dedup: skip events already shown this session
+                        var eventKey = evt.art_piece_id + '_' + evt.time;
+                        if (self.shownEvents[eventKey]) continue;
+                        self.shownEvents[eventKey] = true;
+                        // Show persistent alert card (falls back to toast)
+                        if (typeof window.showOutbidAlert === 'function') {
+                            window.showOutbidAlert(evt.art_piece_id, evt.title);
+                        } else if (typeof window.showToast === 'function') {
+                            window.showToast('You\'ve been outbid on "' + evt.title + '"!', 'error');
                         }
-                        // Trigger immediate status poll to update badges
-                        if (typeof window.aihPollStatus === 'function') {
-                            window.aihPollStatus();
-                        }
+                    }
+                    // Trigger immediate status poll to update badges
+                    if (typeof window.aihPollStatus === 'function') {
+                        window.aihPollStatus();
                     }
                 }
             });

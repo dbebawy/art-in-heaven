@@ -138,32 +138,24 @@
         }
         
         searchTimeout = setTimeout(function() {
-            $.ajax({
-                url: aihApiUrl('search'),
-                type: 'POST',
-                data: {
-                    action: 'aih_search',
-                    nonce: aihAjax.nonce,
-                    search: query
-                },
-                success: function(response) {
-                    if (response.success) {
-                        var ids = response.data.map(function(item) {
-                            return item.id;
-                        });
-                        
-                        $('.aih-art-card, .aih-card').each(function() {
-                            var cardId = parseInt($(this).data('id'), 10);
-                            if (ids.indexOf(cardId) > -1) {
-                                $(this).show();
-                            } else {
-                                $(this).hide();
-                            }
-                        });
-                    }
-                },
-                error: function() {
-                    // Silently fail - search will just not filter
+            aihPost('search', {
+                action: 'aih_search',
+                nonce: aihAjax.nonce,
+                search: query
+            }, function(response) {
+                if (response.success) {
+                    var ids = response.data.map(function(item) {
+                        return item.id;
+                    });
+
+                    $('.aih-art-card, .aih-card').each(function() {
+                        var cardId = parseInt($(this).data('id'), 10);
+                        if (ids.indexOf(cardId) > -1) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
                 }
             });
         }, 300);
