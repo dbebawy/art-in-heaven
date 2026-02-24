@@ -254,10 +254,8 @@ class AIH_Image_Optimizer {
         }
 
         $basename = pathinfo($watermarked_url, PATHINFO_FILENAME);
-        $responsive_base = str_replace('/watermarked/', '/responsive/', dirname($watermarked_url));
-
-        $upload_dir = wp_upload_dir();
         $responsive_dir = self::get_responsive_dir();
+        $responsive_base = self::get_responsive_url();
 
         $variants = array();
 
