@@ -224,7 +224,8 @@ class AIH_Push {
         $vapid = self::get_vapid_keys();
 
         $gallery_page = get_option('aih_gallery_page');
-        $url = $gallery_page ? get_permalink($gallery_page) : home_url('/');
+        $base_url = $gallery_page ? get_permalink($gallery_page) : home_url('/');
+        $url = add_query_arg('art_id', $art_piece_id, $base_url);
 
         $payload = wp_json_encode(array(
             'type'         => 'outbid',
